@@ -6388,3 +6388,363 @@ You could extend this script to:
 ✔ Inbox data can be extracted **without opening emails**
 
 ✔ This technique is useful for **email automation workflows**
+# Python Type Hinting Guide
+
+This document provides a detailed overview of **Type Hinting (Type Annotations) in Python**.  
+Type hints improve **code readability, maintainability, and static analysis** by allowing developers to explicitly specify expected data types.
+
+Type hinting is especially useful when working in large projects or collaborative environments, as it helps developers understand how variables and functions are intended to be used.
+
+---
+
+# What is Type Hinting?
+
+Type hinting allows developers to annotate variables, function parameters, and return types with expected data types.
+
+Example:
+
+```python
+num: int = 10
+```
+
+This tells readers and tools that `num` is expected to be an integer.
+
+Static type checking tools such as **mypy** can analyze these hints and detect potential bugs before runtime.
+
+---
+
+# 1. Variable Type Hinting
+
+You can specify the type of a variable directly when declaring it.
+
+```python
+age: int = 25
+name: str = "Alice"
+height: float = 5.9
+is_active: bool = True
+```
+
+### Why use it?
+
+- Improves readability
+- Helps IDE autocompletion
+- Enables static type checking
+
+---
+
+# 2. Function Parameter Type Hinting
+
+You can annotate the expected types of function parameters.
+
+```python
+def greet(name: str, age: int):
+    print(f"{name} is {age} years old")
+```
+
+Here:
+
+- `name` must be a `str`
+- `age` must be an `int`
+
+---
+
+# 3. Function Return Type Hinting
+
+You can also specify the type a function returns using `->`.
+
+```python
+def add(a: int, b: int) -> int:
+    return a + b
+```
+
+Another example:
+
+```python
+def get_username() -> str:
+    return "admin"
+```
+
+---
+
+# 4. Optional Types
+
+Sometimes a value can be `None`.
+
+Use `Optional` from the typing module.
+
+```python
+from typing import Optional
+
+def find_user(user_id: int) -> Optional[str]:
+    return None
+```
+
+Equivalent syntax (Python 3.10+):
+
+```python
+def find_user(user_id: int) -> str | None:
+    return None
+```
+
+---
+
+# 5. List Type Hinting
+
+Lists can contain specific element types.
+
+Old syntax:
+
+```python
+from typing import List
+
+numbers: List[int] = [1, 2, 3]
+```
+
+Modern Python (3.9+):
+
+```python
+numbers: list[int] = [1, 2, 3]
+```
+
+---
+
+# 6. Dictionary Type Hinting
+
+Dictionaries specify key and value types.
+
+```python
+data: dict[str, int] = {"a": 1, "b": 2}
+```
+
+Old syntax:
+
+```python
+from typing import Dict
+
+data: Dict[str, int]
+```
+
+---
+
+# 7. Tuple Type Hinting
+
+Tuples can contain fixed types.
+
+```python
+point: tuple[int, int] = (10, 20)
+```
+
+Variable length tuple:
+
+```python
+values: tuple[int, ...] = (1, 2, 3, 4)
+```
+
+---
+
+# 8. Set Type Hinting
+
+```python
+unique_ids: set[int] = {1, 2, 3}
+```
+
+---
+
+# 9. Union Types
+
+A variable can accept multiple types.
+
+Old syntax:
+
+```python
+from typing import Union
+
+value: Union[int, str]
+```
+
+Modern syntax:
+
+```python
+value: int | str
+```
+
+---
+
+# 10. Any Type
+
+When a variable can be anything.
+
+```python
+from typing import Any
+
+data: Any = "hello"
+```
+
+---
+
+# 11. Callable Type
+
+Used when passing functions as parameters.
+
+```python
+from typing import Callable
+
+def process(func: Callable[[int, int], int]) -> int:
+    return func(2, 3)
+```
+
+Meaning:
+
+```
+Callable[[param_types], return_type]
+```
+
+---
+
+# 12. Custom Types with TypeAlias
+
+```python
+from typing import TypeAlias
+
+UserId: TypeAlias = int
+
+user_id: UserId = 100
+```
+
+---
+
+# 13. TypedDict (Typed Dictionaries)
+
+Used when dictionaries have fixed structure.
+
+```python
+from typing import TypedDict
+
+class User(TypedDict):
+    name: str
+    age: int
+```
+
+Usage:
+
+```python
+user: User = {"name": "Alice", "age": 30}
+```
+
+---
+
+# 14. Dataclasses with Type Hints
+
+Type hints work very well with dataclasses.
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class User:
+    name: str
+    age: int
+```
+
+---
+
+# 15. Generic Types
+
+Generic types allow reusable type structures.
+
+```python
+from typing import TypeVar
+
+T = TypeVar("T")
+
+def get_first(items: list[T]) -> T:
+    return items[0]
+```
+
+---
+
+# 16. Class Attribute Type Hinting
+
+```python
+class Person:
+    name: str
+    age: int
+
+    def __init__(self, name: str, age: int):
+        self.name = name
+        self.age = age
+```
+
+---
+
+# 17. Literal Types
+
+Restrict values to specific constants.
+
+```python
+from typing import Literal
+
+status: Literal["success", "error"]
+```
+
+---
+
+# 18. Final (Constant Values)
+
+```python
+from typing import Final
+
+MAX_USERS: Final = 100
+```
+
+---
+
+# Benefits of Type Hinting
+
+- Better IDE support
+- Early error detection
+- Improved documentation
+- Better collaboration
+- Safer refactoring
+
+---
+
+# Example Code
+
+Below is a simple example demonstrating **variable type hinting**.
+
+```python
+num: int = 100
+lst: list[int] = [1, 2, 3, 4]
+dt: dict[str, int] = {"key": 0}
+
+print(num)
+print(lst)
+print(dt)
+```
+
+---
+
+# Python Version
+
+Recommended:
+
+```
+Python 3.9+
+```
+
+Modern Python versions support the simplified syntax:
+
+```
+list[int]
+dict[str, int]
+int | str
+```
+
+---
+
+# Author Notes
+
+This README documents various **Python type hinting techniques** to demonstrate attention to **clean code practices, maintainability, and modern Python development standards**.
+
+Proper documentation and type annotations help both developers and recruiters quickly understand the structure and intent of the code.

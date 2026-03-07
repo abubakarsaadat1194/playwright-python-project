@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+print("Automated Mail Checker Running")
 from playwright.sync_api import sync_playwright
 
 
