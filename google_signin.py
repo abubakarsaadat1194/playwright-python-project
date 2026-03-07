@@ -57,8 +57,8 @@ def run():
         # storage_state loads cookies/local storage from a file,
         # allowing reuse of an authenticated session.
         context = browser.new_context(
-            viewport={"width": 820, "height": 920},
-            storage_state="playwright/auth/session.json"
+            viewport={"width": 820, "height": 920}
+
         )
 
         # Open a new browser tab
@@ -78,16 +78,16 @@ def run():
         # If a session file does not exist, you can use the code below
         # to log in manually and then save the session.
 
-        """
+        
         email_input = page.locator("input[name='identifier']")
-        email_input.fill("example@gmail.com")
+        email_input.fill("abubakar.saadat.qa@gmail.com")
 
         next_button = page.get_by_role("button", name="Next")
         next_button.click()
 
         # Pause the script to allow manual password entry
         page.pause()
-        """
+        
 
         # -----------------------------------------------------------
         # Save Updated Authentication State

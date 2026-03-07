@@ -6144,4 +6144,247 @@ playwright-python-project
 ✔ `storage_state` loads saved cookies and local storage  
 ✔ Helps skip login steps in automation  
 ✔ Useful for **authenticated test environments**
+# Playwright Automated Mail Checker (Gmail Unread Email Extractor)
 
+This example demonstrates how to use **Playwright with Python** to automatically scan a **Gmail inbox** and extract information from unread emails.
+
+The script:
+
+1. Opens Gmail using a previously saved login session
+2. Scans the inbox
+3. Detects unread emails
+4. Extracts important details such as:
+   - Sender name
+   - Sender email
+   - Subject
+   - Email preview text
+
+⚠️ The script **does not open the email messages**.  
+It only reads information directly from the **inbox view**.
+
+---
+
+# Prerequisite
+
+The script requires a previously saved authentication session:
+
+```
+playwright/auth/session.json
+```
+
+This file contains the Gmail login cookies and storage state.
+
+See the **Playwright Authentication section** to learn how to generate this file.
+
+---
+
+# How the Script Works
+
+The automation follows these steps:
+
+```
+Launch browser
+↓
+Load saved Gmail session
+↓
+Open Gmail inbox
+↓
+Scan inbox rows
+↓
+Detect unread emails
+↓
+Extract sender, subject, preview
+↓
+Print email summary
+```
+
+---
+
+# Example Script
+
+```python
+from playwright.sync_api import sync_playwright
+
+"""
+Title: Gmail Inbox Unread Email Extractor
+
+Description:
+This script uses Playwright to open Gmail and extract information
+from unread emails directly from the inbox view.
+
+It prints:
+- Sender
+- Subject
+- Preview text
+
+The script does NOT open the email messages.
+"""
+
+
+def run():
+
+    with sync_playwright() as p:
+
+        # Launch browser
+        browser = p.chromium.launch(
+            headless=False,
+            slow_mo=1000,
+            args=[
+                "--disable-dev-shm-usage",
+                "--disable-blink-features=AutomationControlled"
+            ]
+        )
+
+        # Load saved Gmail session
+        context = browser.new_context(
+            viewport={"width": 820, "height": 900},
+            storage_state="playwright/auth/session.json"
+        )
+
+        page = context.new_page()
+
+        # Open Gmail inbox
+        page.goto("https://mail.google.com/mail/u/0/#inbox", wait_until="load")
+
+        # Count email rows
+        email_count = page.locator("//tr[@tabindex='-1']").count()
+
+        print("\nemails found:", email_count)
+
+        print("\n---- Unread Email Summary ----")
+
+        i = 0
+
+        emails = page.locator("div.UI table tr")
+
+        for email in emails.all():
+
+            # Check if the email is unread
+            is_new_email = email.locator("td li[data-tooltip='Mark as read']").count() == 1
+
+            if is_new_email:
+
+                i += 1
+
+                sender = email.locator("span").nth(2).get_attribute("name")
+                sender_email = email.locator("span").nth(2).get_attribute("email")
+                subject = email.locator("span.bog").text_content()
+                preview = email.locator("span.y2").inner_text()
+
+                print("-----------------------")
+                print("Sender :", sender)
+                print("Sender email :", sender_email)
+                print("Subject :", subject)
+                print("Preview:", preview)
+                print("-----------------------")
+
+        print("\nFinished scanning inbox.")
+        print(f"There were {i} unread emails")
+
+        context.close()
+
+
+if __name__ == "__main__":
+    run()
+```
+
+---
+
+# Example Output
+
+Example terminal output:
+
+```
+emails found: 25
+
+---- Unread Email Summary ----
+
+-----------------------
+Sender : GitHub
+Sender email : noreply@github.com
+Subject : New login to your account
+Preview: A new sign-in was detected...
+-----------------------
+
+-----------------------
+Sender : LinkedIn
+Sender email : notifications@linkedin.com
+Subject : 5 new job recommendations
+Preview: Based on your profile we found...
+-----------------------
+
+Finished scanning inbox.
+There were 2 unread emails
+```
+
+---
+
+# Key Playwright Techniques Used
+
+| Technique | Purpose |
+|------|------|
+| `storage_state` | Reuse Gmail login session |
+| `locator()` | Locate email rows in inbox |
+| `count()` | Count matching elements |
+| `get_attribute()` | Extract sender metadata |
+| `text_content()` | Extract email subject |
+| `inner_text()` | Extract preview text |
+
+---
+
+# Detecting Unread Emails
+
+The script determines if an email is unread using:
+
+```python
+email.locator("td li[data-tooltip='Mark as read']")
+```
+
+If this element exists, the email is **unread**.
+
+---
+
+# Why This Automation Is Useful
+
+This type of automation is useful for:
+
+- Email monitoring systems
+- Notification dashboards
+- Automated alert systems
+- Workflow automation
+- Email scraping tools
+
+---
+
+# Important Notes
+
+⚠️ Gmail's UI structure can change over time.
+
+If the script stops working:
+
+- Inspect Gmail elements using browser DevTools
+- Update the Playwright locators
+
+---
+
+# Possible Improvements
+
+You could extend this script to:
+
+- Save emails to a **CSV file**
+- Send **Slack notifications**
+- Store results in a **database**
+- Automatically **open unread emails**
+- Download **email attachments**
+
+---
+
+# Key Takeaways
+
+✔ Playwright can automate **web-based email clients**
+
+✔ Gmail sessions can be reused using **storage_state**
+
+✔ Inbox data can be extracted **without opening emails**
+
+✔ This technique is useful for **email automation workflows**
