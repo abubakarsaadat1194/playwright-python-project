@@ -1,4 +1,4 @@
-# Playwright with Python - From A to Z
+# Playwright Automation with Python - From A to Z
 
 ## Table of Contents
 
