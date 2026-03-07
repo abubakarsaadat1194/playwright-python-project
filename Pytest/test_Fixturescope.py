@@ -1,10 +1,10 @@
 import json
-import report
 import pytest
+import report
 
 
 @pytest.fixture
-def report_json():
+def report_json(scope="session"):
     """
     Pytest fixture that generates the report and loads the JSON content.
 

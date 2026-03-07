@@ -7357,3 +7357,757 @@ When writing Pytest tests:
 | Assertions | `assert` statements |
 
 By following these conventions, Pytest can automatically discover and execute tests efficiently.
+---
+
+# Playwright Testing with Pytest (`pytest-playwright`)
+
+Playwright provides an official Pytest plugin called **pytest-playwright** that integrates Playwright browser automation with the Pytest testing framework.
+
+This plugin automatically provides useful fixtures such as:
+
+- `page`
+- `browser`
+- `context`
+
+These fixtures allow you to write browser tests without manually launching the browser.
+
+---
+
+# Installing the Playwright Pytest Plugin
+
+Install the plugin using pip:
+
+```bash
+pip install pytest-playwright
+```
+
+Example installation output:
+
+```
+Successfully installed pytest-playwright-0.7.2
+pytest-base-url-2.1.0
+python-slugify-8.0.4
+requests-2.32.5
+```
+
+After installation, Pytest automatically detects the plugin.
+
+---
+
+# Example Test: `test_app.py`
+
+This test verifies that the **"GET STARTED"** link on the Playwright Python documentation page navigates to the correct URL.
+
+```python
+from playwright.sync_api import Page
+
+def test_page_has_get_started_link(page: Page):
+    page.goto("https://playwright.dev/python")
+
+    link = page.get_by_role("link", name="GET STARTED")
+
+    link.click()
+
+    assert page.url == "https://playwright.dev/python/docs/intro"
+```
+
+---
+
+# Explanation of the Test
+
+### Page Fixture
+
+```python
+page: Page
+```
+
+The `page` fixture is provided automatically by **pytest-playwright**.
+
+It creates:
+
+```
+Browser
+   ↓
+Browser Context
+   ↓
+Page (Tab)
+```
+
+So the test can directly interact with a browser page.
+
+---
+
+### Navigate to Website
+
+```python
+page.goto("https://playwright.dev/python")
+```
+
+This opens the Playwright Python documentation website.
+
+---
+
+### Locate the Link
+
+```python
+link = page.get_by_role("link", name="GET STARTED")
+```
+
+Playwright uses **role-based locators** for reliable element selection.
+
+Role-based locators are recommended because they use **accessibility attributes (ARIA)**.
+
+---
+
+### Click the Link
+
+```python
+link.click()
+```
+
+This simulates a user clicking the **GET STARTED** link.
+
+---
+
+### Verify Navigation
+
+```python
+assert page.url == "https://playwright.dev/python/docs/intro"
+```
+
+The assertion verifies that clicking the link navigates to the correct documentation page.
+
+---
+
+# Running the Test
+
+Run the test using Pytest:
+
+```bash
+pytest test_app.py
+```
+
+Example output:
+
+```
+================================================= test session starts ==================================================
+platform darwin -- Python 3.11.3
+plugins: playwright-0.7.2
+collected 1 item
+
+test_app.py .                                                           [100%]
+
+================================================== 1 passed ===================================================
+```
+
+---
+
+# Running Tests in Headed Mode
+
+By default, Playwright runs browsers in **headless mode**.
+
+To see the browser UI:
+
+```bash
+pytest test_app.py --headed
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_app.py .                                                           [100%]
+```
+
+Now the browser window will appear while the test runs.
+
+---
+
+# Running Tests in Different Browsers
+
+Playwright supports multiple browsers.
+
+You can run the same test in:
+
+- Chromium
+- Firefox
+- WebKit
+
+Example:
+
+```bash
+pytest test_app.py --headed --browser=firefox
+```
+
+---
+
+# Running Tests with Slow Motion
+
+To visually observe browser actions, use **slow motion mode**.
+
+```bash
+pytest test_app.py --headed --browser=firefox --slowmo=500
+```
+
+This slows down actions by **500 milliseconds**.
+
+---
+
+# Example Terminal Session
+
+Example workflow from the terminal:
+
+```bash
+pytest test_app.py
+```
+
+```
+1 passed in 9.94s
+```
+
+Run in headed mode:
+
+```bash
+pytest test_app.py --headed
+```
+
+```
+1 passed in 30.99s
+```
+
+Run with Firefox and slow motion:
+
+```bash
+pytest test_app.py --headed --browser=firefox --slowmo=500
+```
+
+```
+1 passed
+```
+
+---
+
+# Troubleshooting: "No Tests Ran"
+
+If you see the error:
+
+```
+collected 0 items
+ERROR: file or directory not found
+```
+
+Possible causes:
+
+### 1. Running Pytest from the Wrong Directory
+
+Ensure you are inside the project folder.
+
+Check current directory:
+
+```bash
+pwd
+```
+
+Navigate to the project folder:
+
+```bash
+cd playwright-python-project
+```
+
+---
+
+### 2. Test File Does Not Exist
+
+Verify that the file exists:
+
+```bash
+ls
+```
+
+Expected output:
+
+```
+test_app.py
+```
+
+---
+
+### 3. Incorrect Test Naming
+
+Pytest only detects tests that follow these patterns:
+
+```
+test_*.py
+*_test.py
+```
+
+Example valid names:
+
+```
+test_app.py
+test_login.py
+api_test.py
+```
+
+---
+
+### 4. Test Function Naming
+
+Functions must start with:
+
+```
+test_
+```
+
+Example:
+
+```python
+def test_page_has_get_started_link():
+```
+
+---
+
+# Recommended Project Structure
+
+```
+playwright-python-project
+│
+├── tests
+│   └── test_app.py
+│
+├── playwright
+│
+├── venv
+│
+└── README.md
+```
+
+---
+
+# Key Skills Demonstrated
+
+This example demonstrates several important automation testing concepts:
+
+- Playwright browser automation
+- Pytest test framework
+- Role-based element locators
+- Page navigation testing
+- Cross-browser testing
+- Headless vs headed execution
+- Debugging Playwright tests
+
+---
+
+# Key Takeaways
+
+✔ `pytest-playwright` integrates Playwright with Pytest  
+✔ The `page` fixture automatically creates a browser page  
+✔ Tests can run in multiple browsers  
+✔ `--headed` shows the browser UI  
+✔ `--slowmo` slows down automation for debugging  
+✔ Pytest automatically discovers tests based on naming conventions
+
+---
+---
+
+# Using `pytest.ini` to Configure Playwright Test Options
+
+Instead of typing Playwright options every time you run tests, you can define **default test settings** using a `pytest.ini` configuration file.
+
+This allows Pytest to automatically apply browser options whenever tests run.
+
+---
+
+# Example `pytest.ini`
+
+Create a file called:
+
+```
+pytest.ini
+```
+
+Add the following configuration:
+
+```ini
+[pytest]
+addopts = --headed --slowmo=500 --browser=firefox
+```
+
+---
+
+# What This Configuration Does
+
+This configuration tells Pytest to automatically run Playwright tests with:
+
+| Option | Description |
+|------|-------------|
+| `--headed` | Runs the browser with UI instead of headless mode |
+| `--slowmo=500` | Slows down each browser action by **500 ms** |
+| `--browser=firefox` | Runs tests using the **Firefox browser** |
+
+---
+
+# Running Tests with Configuration
+
+Once `pytest.ini` is configured, you can simply run:
+
+```bash
+pytest
+```
+
+Pytest will automatically apply the defined options.
+
+Example output:
+
+```
+platform darwin -- Python 3.11
+plugins: playwright-0.7.2
+collected 1 item
+
+test_app.py .                                                  [100%]
+
+1 passed
+```
+
+The browser will open automatically because of the `--headed` option.
+
+---
+
+# Benefits of Using `pytest.ini`
+
+Using a configuration file improves test workflows by:
+
+✔ Avoiding repetitive command-line arguments  
+✔ Standardizing test execution settings  
+✔ Simplifying CI/CD integration  
+✔ Making tests easier to run for other developers  
+
+---
+
+# Example Project Structure
+
+```
+playwright-python-project
+│
+├── pytest.ini
+├── test_app.py
+├── venv
+└── README.md
+```
+
+---
+
+# Overriding `pytest.ini` Options
+
+Command-line options can override `pytest.ini` settings.
+
+Example:
+
+Run tests in Chromium instead of Firefox:
+
+```bash
+pytest --browser=chromium
+```
+
+Run tests in headless mode:
+
+```bash
+pytest --headless
+```
+
+---
+
+# Key Takeaways
+
+✔ `pytest.ini` defines **default Pytest configuration**  
+✔ `addopts` automatically applies Playwright options  
+✔ Makes test execution **simpler and consistent**  
+✔ Command-line options can override these defaults
+
+---
+---
+
+# Test Hooks and Fixtures in Pytest (Playwright)
+
+When writing automated tests, we often need to perform **setup and teardown operations** before and after each test.
+
+Examples:
+
+- Opening a browser page
+- Navigating to a website
+- Cleaning up resources
+- Closing the browser
+
+Pytest provides **fixtures** that act as **test hooks** to manage these operations automatically.
+
+Fixtures help avoid repeating setup logic across multiple tests.
+
+---
+
+# Example Code
+
+```python
+from playwright.sync_api import Page
+import pytest
+
+@pytest.fixture(autouse=True, scope="function")
+def visit_playwright(page: Page):
+    page.goto("https://playwright.dev/python")
+    yield page
+    page.close()
+    print("\n[ Fixture ]: page closed!")
+
+def test_page_has_docs_link(page: Page):
+    link = page.get_by_role("link", name="Docs")
+    assert link.is_visible()
+
+def test_page_has_get_started_link(page: Page):
+    link = page.get_by_role("link", name="GET STARTED")
+    link.click()
+    assert page.url == "https://playwright.dev/python/docs/intro"
+```
+
+---
+
+# Understanding the Test Hook (Fixture)
+
+The fixture defined here acts as a **setup and teardown hook**.
+
+```python
+@pytest.fixture(autouse=True, scope="function")
+def visit_playwright(page: Page):
+```
+
+### autouse=True
+
+This means the fixture runs **automatically for every test function**.
+
+Without `autouse`, tests would need to explicitly request the fixture.
+
+Example without autouse:
+
+```python
+def test_example(visit_playwright):
+```
+
+With `autouse=True`, the fixture is applied automatically.
+
+---
+
+### scope="function"
+
+This means the fixture runs **once for every test function**.
+
+Available fixture scopes:
+
+| Scope | Description |
+|------|-------------|
+| function | Runs once per test |
+| class | Runs once per test class |
+| module | Runs once per file |
+| session | Runs once for entire test session |
+
+In this example:
+
+```
+Test 1
+   ↓
+Fixture setup
+   ↓
+Run test
+   ↓
+Fixture teardown
+
+Test 2
+   ↓
+Fixture setup
+   ↓
+Run test
+   ↓
+Fixture teardown
+```
+
+---
+
+# Setup Phase (Before Test)
+
+The setup logic runs **before the test executes**.
+
+```python
+page.goto("https://playwright.dev/python")
+```
+
+This ensures every test starts on the **Playwright Python homepage**.
+
+---
+
+# Yield Statement
+
+```python
+yield page
+```
+
+`yield` splits the fixture into two parts:
+
+```
+Setup code
+↓
+yield
+↓
+Test runs
+↓
+Teardown code
+```
+
+Everything **before yield** runs before the test.
+
+Everything **after yield** runs after the test.
+
+---
+
+# Teardown Phase (After Test)
+
+After the test finishes, the fixture executes the teardown logic.
+
+```python
+page.close()
+print("\n[ Fixture ]: page closed!")
+```
+
+This ensures:
+
+- The page is properly closed
+- Resources are cleaned up
+- Debug information is printed
+
+Example console output:
+
+```
+[ Fixture ]: page closed!
+```
+
+---
+
+# Test 1: Verify Docs Link
+
+```python
+def test_page_has_docs_link(page: Page):
+```
+
+This test verifies that the **Docs link exists on the page**.
+
+```python
+link = page.get_by_role("link", name="Docs")
+assert link.is_visible()
+```
+
+Steps performed:
+
+1. Locate the **Docs** link
+2. Check if it is visible
+3. Pass the test if the link is present
+
+---
+
+# Test 2: Verify GET STARTED Navigation
+
+```python
+def test_page_has_get_started_link(page: Page):
+```
+
+This test verifies that clicking **GET STARTED** navigates to the correct page.
+
+Steps performed:
+
+```python
+link = page.get_by_role("link", name="GET STARTED")
+```
+
+Locate the link.
+
+```
+link.click()
+```
+
+Click the link.
+
+```
+assert page.url == "https://playwright.dev/python/docs/intro"
+```
+
+Verify navigation succeeded.
+
+---
+
+# Test Execution Flow
+
+The test execution lifecycle looks like this:
+
+```
+Test Session Start
+       ↓
+Fixture Setup
+       ↓
+Navigate to Playwright Website
+       ↓
+Run Test
+       ↓
+Fixture Teardown
+       ↓
+Close Page
+       ↓
+Next Test
+```
+
+---
+
+# Running the Tests
+
+Run the tests using:
+
+```bash
+pytest
+```
+
+Example output:
+
+```
+test_hooks.py::test_page_has_docs_link PASSED
+test_hooks.py::test_page_has_get_started_link PASSED
+```
+
+Example with fixture output:
+
+```
+test_hooks.py::test_page_has_docs_link PASSED
+[ Fixture ]: page closed!
+
+test_hooks.py::test_page_has_get_started_link PASSED
+[ Fixture ]: page closed!
+```
+
+---
+
+# Why Fixtures Are Important
+
+Fixtures help create **clean and maintainable test automation frameworks**.
+
+Benefits:
+
+✔ Avoid duplicated setup code  
+✔ Automatically manage browser lifecycle  
+✔ Ensure tests run in a predictable environment  
+✔ Simplify test structure  
+
+---
+
+# Key Takeaways
+
+✔ Pytest fixtures act as **test hooks**  
+✔ `autouse=True` automatically applies fixtures to all tests  
+✔ `scope="function"` runs fixture per test  
+✔ `yield` separates setup and teardown logic  
+✔ Fixtures improve test maintainability and reliability
+
+---
