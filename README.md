@@ -14,14 +14,12 @@
 
 ---
 
+# Environment and IDE Setup
+
 - [How to Open Terminal in Visual Studio Code](#how-to-open-terminal-in-visual-studio-code)
-
 - [Fix: Python Cannot Find test.py (Playwright)](#fix-python-cannot-find-testpy-playwright)
-
 - [Fix: zsh: command not found: code](#fix-zsh-command-not-found-code)
-
 - [How to Open an Interactive Playwright REPL on macOS](#how-to-open-an-interactive-playwright-repl-on-macos)
-
 - [How to Clear the Terminal in Visual Studio Code](#how-to-clear-the-terminal-in-visual-studio-code)
 
 ---
@@ -100,9 +98,28 @@
 
 ---
 
-# Authentication
+# Authentication and Session Handling
 
 - [Playwright Authentication: Reusing Login Session with storage_state](#playwright-authentication-reusing-login-session-with-storage_state)
+
+---
+
+# Automation Projects
+
+- [Playwright Automated Mail Checker (Gmail Unread Email Extractor)](#playwright-automated-mail-checker-gmail-unread-email-extractor)
+
+---
+
+# Python Development Best Practices
+
+- [Python Type Hinting Guide](#python-type-hinting-guide)
+
+---
+
+# Testing with Pytest
+
+- [Pytest JSON Test Report Generator](#pytest-json-test-report-generator)
+- [Writing Tests with Pytest](#writing-tests-with-pytest)
 # Playwright Python Setup Guide
 
 This guide explains how to install and configure **Playwright with Python** on macOS.
@@ -6743,8 +6760,600 @@ int | str
 
 ---
 
-# Author Notes
+# Pytest JSON Test Report Generator
 
-This README documents various **Python type hinting techniques** to demonstrate attention to **clean code practices, maintainability, and modern Python development standards**.
+This project demonstrates how to generate and validate a **JSON test report using Python and Pytest**.
 
-Proper documentation and type annotations help both developers and recruiters quickly understand the structure and intent of the code.
+The implementation shows several important Python testing techniques including:
+
+- JSON report generation
+- File handling
+- Modular design
+- Pytest fixtures
+- Automated validation of report structure
+- Reusable test data
+- Documentation of test workflow
+
+This example simulates a simple **test reporting system** that creates a JSON file and verifies its structure using automated tests.
+
+---
+
+# Project Structure
+
+```
+project/
+│
+├── report.py
+├── test_report.py
+├── report.json
+└── README.md
+```
+
+| File | Description |
+|-----|-------------|
+| `report.py` | Generates the JSON test report |
+| `test_report.py` | Pytest test suite validating the report |
+| `report.json` | Generated output report |
+| `README.md` | Documentation |
+
+---
+
+# report.py – Report Generator
+
+This module generates a JSON test report containing metadata about test execution.
+
+## Code
+
+```python
+import json
+from datetime import datetime
+
+
+def generate_report():
+    """
+    Generate a JSON test report.
+
+    This function creates a dictionary containing:
+    - timestamp : the time when the report was generated
+    - status    : test result (pass/fail)
+    - summary   : test identifier in the format module.py::test_case
+
+    The report is saved as 'report.json'.
+    """
+
+    # Create report data
+    report_data = {
+        "timestamp": datetime.now().isoformat(),
+        "status": "pass",
+        "summary": "module.py::test_case"
+    }
+
+    # Write the report data to a JSON file
+    with open("report.json", "w") as file:
+        json.dump(report_data, file, indent=4)
+
+    print("Report successfully generated: report.json")
+```
+
+---
+
+# Techniques Used in report.py
+
+## 1. JSON Serialization
+
+The project uses Python's built-in **json module** to convert Python dictionaries into JSON format.
+
+```
+json.dump()
+```
+
+Purpose:
+
+- Converts Python objects → JSON
+- Stores structured data in a file
+
+Example:
+
+```python
+json.dump(report_data, file, indent=4)
+```
+
+The `indent=4` parameter improves readability.
+
+Example output:
+
+```json
+{
+    "timestamp": "2026-03-07T18:45:10.123456",
+    "status": "pass",
+    "summary": "module.py::test_case"
+}
+```
+
+---
+
+## 2. Datetime Handling
+
+The report includes the exact time the report was generated.
+
+```
+datetime.now().isoformat()
+```
+
+This produces a **standard ISO 8601 timestamp**, which is commonly used in APIs and logging systems.
+
+Example:
+
+```
+2026-03-07T18:45:10.123456
+```
+
+---
+
+## 3. File Handling
+
+The project uses Python’s context manager (`with` statement) to safely write files.
+
+```python
+with open("report.json", "w") as file:
+```
+
+Benefits:
+
+- Automatically closes the file
+- Prevents memory leaks
+- Ensures safe file writing
+
+---
+
+# test_report.py – Automated Tests
+
+This module uses **Pytest** to verify the generated JSON report.
+
+## Code
+
+```python
+import json
+import Pytest.report as report
+import pytest
+
+
+@pytest.fixture
+def report_json():
+    """
+    Pytest fixture that generates the report and loads the JSON content.
+
+    Steps performed:
+    1. Calls the report generator function.
+    2. Opens the generated report.json file.
+    3. Loads the JSON content into a Python dictionary.
+    4. Returns the dictionary so it can be reused by multiple tests.
+    """
+
+    # Generate the report file
+    report.generate_report()
+
+    # Load and return the JSON report data
+    with open("report.json") as file:
+        return json.load(file)
+
+
+def test_report_json(report_json):
+    """
+    Test that the generated report JSON is a dictionary.
+
+    This ensures the report structure is valid
+    and correctly parsed from the JSON file.
+    """
+
+    # Verify the report structure
+    assert isinstance(report_json, dict)
+
+
+def test_report_fields(report_json):
+    """
+    Test that the generated report contains all required fields.
+
+    Required fields:
+    - timestamp : when the report was generated
+    - status    : pass/fail result of the test
+    - summary   : identifier of the executed test
+    """
+
+    # Verify required fields exist in the report
+    assert "timestamp" in report_json
+    assert "status" in report_json
+    assert "summary" in report_json
+```
+
+---
+
+# Techniques Used in test_report.py
+
+## 1. Pytest Framework
+
+Pytest is a powerful testing framework for Python.
+
+Benefits:
+
+- Simple syntax
+- Automatic test discovery
+- Powerful fixtures
+- Rich plugin ecosystem
+
+Tests are automatically detected when they follow this naming pattern:
+
+```
+test_*.py
+```
+
+---
+
+# 2. Pytest Fixtures
+
+The project uses a **fixture** to generate and load the JSON report.
+
+```
+@pytest.fixture
+```
+
+Purpose:
+
+- Provide reusable test data
+- Avoid repeating setup logic
+- Improve test maintainability
+
+Example:
+
+```python
+@pytest.fixture
+def report_json():
+```
+
+This fixture:
+
+1. Generates the report
+2. Reads the JSON file
+3. Returns a Python dictionary
+
+All tests can reuse this data.
+
+---
+
+# 3. JSON Deserialization
+
+The report file is loaded into Python using:
+
+```
+json.load()
+```
+
+Example:
+
+```python
+with open("report.json") as file:
+    return json.load(file)
+```
+
+This converts JSON → Python dictionary.
+
+---
+
+# 4. Assertions
+
+Assertions verify expected conditions.
+
+Example:
+
+```python
+assert isinstance(report_json, dict)
+```
+
+This ensures:
+
+- JSON was parsed successfully
+- The report structure is valid
+
+---
+
+# 5. Field Validation
+
+The test ensures the report contains required keys.
+
+```python
+assert "timestamp" in report_json
+assert "status" in report_json
+assert "summary" in report_json
+```
+
+This verifies the **report schema**.
+
+---
+
+# Testing Strategy
+
+The testing process follows these steps:
+
+```
+Test Start
+     │
+     ▼
+Fixture Generates Report
+     │
+     ▼
+JSON File Created
+     │
+     ▼
+JSON Loaded into Dictionary
+     │
+     ▼
+Tests Validate Structure
+     │
+     ▼
+Tests Validate Required Fields
+     │
+     ▼
+Test Pass / Fail
+```
+
+---
+
+# Running the Tests
+
+Install pytest:
+
+```
+pip install pytest
+```
+
+Run tests:
+
+```
+pytest -v
+```
+
+Example output:
+
+```
+test_report.py::test_report_json PASSED
+test_report.py::test_report_fields PASSED
+```
+
+---
+
+# Example Generated Report
+
+```
+report.json
+```
+
+```json
+{
+    "timestamp": "2026-03-07T18:45:10.123456",
+    "status": "pass",
+    "summary": "module.py::test_case"
+}
+```
+
+---
+
+# Key Skills Demonstrated
+
+This project demonstrates the following engineering skills:
+
+- Python scripting
+- JSON data processing
+- Automated testing with Pytest
+- Test fixtures
+- File handling
+- Structured test reporting
+- Clean code documentation
+- Modular software design
+
+---
+
+# Possible Future Improvements
+
+Potential enhancements include:
+
+- Dynamic test status detection
+- Multiple test case reporting
+- HTML report generation
+- Integration with CI/CD pipelines
+- Logging support
+- Error handling for missing files
+
+---
+
+---
+
+# Writing Tests with Pytest
+
+Pytest is a popular Python testing framework used to write **simple, scalable, and maintainable automated tests**. It allows developers to verify that code behaves as expected.
+
+Pytest automatically discovers and runs tests without requiring complex configuration.
+
+---
+
+# Pytest File Naming Convention
+
+Pytest discovers tests based on **specific naming patterns**.
+
+Test files must follow one of these formats:
+
+```
+test_*.py
+*_test.py
+```
+
+Examples:
+
+```
+test_report.py
+test_api.py
+login_test.py
+calculator_test.py
+```
+
+Recommended format:
+
+```
+test_<module_name>.py
+```
+
+Example:
+
+```
+report.py
+test_report.py
+```
+
+This makes it easy to identify which test file corresponds to which module.
+
+---
+
+# Test Function Naming Convention
+
+Each test function must begin with the prefix:
+
+```
+test_
+```
+
+Example:
+
+```python
+def test_addition():
+    pass
+```
+
+This allows Pytest to automatically detect and execute the test.
+
+---
+
+# Basic Structure of a Pytest Test
+
+A typical Pytest test includes three parts:
+
+1. **Setup** – Prepare test data
+2. **Execution** – Run the function being tested
+3. **Assertion** – Verify the result
+
+Example:
+
+```python
+def test_addition():
+    result = 2 + 2
+    assert result == 4
+```
+
+---
+
+# Example Pytest Test File
+
+Below is a simple example demonstrating how to test a Python function.
+
+## calculator.py
+
+```python
+def add(a, b):
+    return a + b
+```
+
+## test_calculator.py
+
+```python
+import calculator
+
+def test_add():
+    result = calculator.add(2, 3)
+    assert result == 5
+
+
+def test_add_negative_numbers():
+    result = calculator.add(-2, -3)
+    assert result == -5
+```
+
+---
+
+# Using Fixtures in Pytest
+
+Fixtures are reusable setup functions that prepare test data.
+
+Example:
+
+```python
+import pytest
+
+@pytest.fixture
+def sample_data():
+    return {"name": "Alice", "age": 30}
+
+
+def test_sample_data(sample_data):
+    assert sample_data["name"] == "Alice"
+```
+
+Benefits of fixtures:
+
+- Reusable test setup
+- Cleaner test code
+- Reduced duplication
+
+---
+
+# Running Pytest
+
+Install pytest if not already installed:
+
+```
+pip install pytest
+```
+
+Run tests in the project directory:
+
+```
+pytest
+```
+
+Verbose mode:
+
+```
+pytest -v
+```
+
+Example output:
+
+```
+test_report.py::test_report_json PASSED
+test_report.py::test_report_fields PASSED
+```
+
+---
+
+# Pytest Best Practices
+
+Follow these guidelines when writing tests:
+
+- Use clear test names
+- Write small focused tests
+- Avoid complex logic inside tests
+- Use fixtures for reusable setup
+- Keep tests independent
+- Maintain consistent naming conventions
+
+---
+
+# Summary
+
+When writing Pytest tests:
+
+| Component | Convention |
+|--------|--------|
+| Test file | `test_*.py` |
+| Test function | `test_*` |
+| Fixtures | `@pytest.fixture` |
+| Assertions | `assert` statements |
+
+By following these conventions, Pytest can automatically discover and execute tests efficiently.
