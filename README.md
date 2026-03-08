@@ -8111,3 +8111,2603 @@ Benefits:
 ✔ Fixtures improve test maintainability and reliability
 
 ---
+---
+
+# Taking Screenshots with Playwright
+
+Screenshots are extremely useful in automation testing. They help capture the **state of the application during test execution** and are commonly used for:
+
+- Debugging test failures
+- Visual verification
+- Test reporting
+- Documentation
+- Capturing UI changes
+
+Playwright provides several ways to take screenshots, including:
+
+- Page screenshots
+- Element screenshots
+- Clipped screenshots (specific screen areas)
+- Full-page screenshots
+
+---
+
+# Example Test: Navigation and Screenshots
+
+```python
+from playwright.sync_api import Page
+
+# Constants
+BASE_URL = "https://playwright.dev/python"
+DOCS_URL = "https://playwright.dev/python/docs/intro"
+
+
+def test_page_navigation_and_screenshots(page: Page):
+    """
+    Test navigation to the Playwright documentation page and demonstrate
+    multiple ways of taking screenshots using Playwright.
+
+    This test performs the following steps:
+    1. Opens the Playwright Python homepage.
+    2. Takes a screenshot of the visible viewport.
+    3. Captures screenshots of specific elements.
+    4. Navigates using the "GET STARTED" link.
+    5. Captures a full-page screenshot of the documentation page.
+    6. Verifies the navigation URL.
+    """
+
+    # Navigate to Playwright Python homepage
+    page.goto(BASE_URL)
+
+    # Screenshot Method 1: Capture visible page viewport
+    page.screenshot(path="screenshots/homepage_viewport.png")
+
+    # Locate "GET STARTED" link
+    get_started_link = page.get_by_role("link", name="GET STARTED")
+
+    # Screenshot Method 2: Capture specific element
+    get_started_link.screenshot(path="screenshots/get_started_element.png")
+
+    # Locate "Docs" navigation link
+    docs_link = page.get_by_role("link", name="Docs")
+
+    # Screenshot Method 3: Capture another element
+    docs_link.screenshot(path="screenshots/docs_link.png")
+
+    # Screenshot Method 4: Highlight area by bounding box screenshot
+    box = docs_link.bounding_box()
+    if box:
+        page.screenshot(
+            path="screenshots/docs_link_area.png",
+            clip={
+                "x": box["x"],
+                "y": box["y"],
+                "width": box["width"],
+                "height": box["height"],
+            },
+        )
+
+    # Click "GET STARTED" link
+    get_started_link.click()
+
+    # Screenshot Method 5: Capture full page screenshot
+    page.screenshot(
+        path="screenshots/docs_full_page.png",
+        full_page=True
+    )
+
+    # Verify navigation
+    assert page.url == DOCS_URL
+```
+
+---
+
+# Screenshot Techniques Demonstrated
+
+This test demonstrates **five different screenshot techniques**.
+
+---
+
+# 1. Viewport Screenshot
+
+```python
+page.screenshot(path="screenshots/homepage_viewport.png")
+```
+
+This captures **only the visible portion of the page** (the browser viewport).
+
+Example output:
+
+```
+screenshots/homepage_viewport.png
+```
+
+This is useful for:
+
+- UI verification
+- Documentation screenshots
+- Capturing current page state
+
+---
+
+# 2. Element Screenshot
+
+Playwright allows taking screenshots of **specific elements**.
+
+```python
+get_started_link.screenshot(
+    path="screenshots/get_started_element.png"
+)
+```
+
+This captures **only the selected element**.
+
+Example output:
+
+```
+screenshots/get_started_element.png
+```
+
+Advantages:
+
+- Focused screenshots
+- Cleaner debugging
+- Useful for visual testing
+
+---
+
+# 3. Screenshot of Another Element
+
+```python
+docs_link.screenshot(
+    path="screenshots/docs_link.png"
+)
+```
+
+This captures the **Docs navigation link**.
+
+Playwright automatically crops the screenshot to the element.
+
+---
+
+# 4. Bounding Box Screenshot (Clipped Area)
+
+Sometimes you want to capture a **specific region of the page**.
+
+This can be done using the element's bounding box.
+
+```python
+box = docs_link.bounding_box()
+```
+
+The bounding box returns:
+
+```
+{
+    x: position from left
+    y: position from top
+    width: element width
+    height: element height
+}
+```
+
+Then we capture only that area:
+
+```python
+page.screenshot(
+    path="screenshots/docs_link_area.png",
+    clip={
+        "x": box["x"],
+        "y": box["y"],
+        "width": box["width"],
+        "height": box["height"],
+    }
+)
+```
+
+This allows capturing **custom regions of the page**.
+
+---
+
+# 5. Full Page Screenshot
+
+```python
+page.screenshot(
+    path="screenshots/docs_full_page.png",
+    full_page=True
+)
+```
+
+This captures the **entire webpage**, including parts not visible in the viewport.
+
+Example output:
+
+```
+screenshots/docs_full_page.png
+```
+
+Full-page screenshots are useful for:
+
+- Visual regression testing
+- Documentation
+- Debugging layout issues
+
+---
+
+# Screenshot Output Structure
+
+The screenshots are saved in the following folder:
+
+```
+project/
+│
+├── screenshots/
+│   ├── homepage_viewport.png
+│   ├── get_started_element.png
+│   ├── docs_link.png
+│   ├── docs_link_area.png
+│   └── docs_full_page.png
+│
+├── test_screenshots.py
+└── README.md
+```
+
+---
+
+# Running the Test
+
+Run the test using:
+
+```bash
+pytest test_screenshots.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_screenshots.py .                                              [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices for Screenshots
+
+When working with screenshots in automation:
+
+✔ Store screenshots in a **separate directory**  
+✔ Use **descriptive filenames**  
+✔ Capture screenshots **on test failures**  
+✔ Use element screenshots for **focused debugging**  
+
+---
+
+# Common Screenshot Options
+
+| Option | Description |
+|------|-------------|
+| `path` | File path for screenshot |
+| `full_page=True` | Capture entire webpage |
+| `clip={}` | Capture specific screen area |
+| `type="jpeg"` | Change image format |
+| `quality=80` | Control JPEG quality |
+
+Example:
+
+```python
+page.screenshot(path="image.jpg", type="jpeg", quality=80)
+```
+
+---
+
+# Key Takeaways
+
+✔ Playwright supports **multiple screenshot methods**  
+✔ Screenshots can capture **entire pages or specific elements**  
+✔ `full_page=True` captures the full webpage  
+✔ `clip` allows capturing custom regions  
+✔ Screenshots are essential for **debugging and visual testing**
+
+---
+---
+
+# Recording Test Videos with Playwright
+
+Playwright provides built-in support for **recording videos during test execution**.  
+Video recording is extremely useful for debugging automation failures and reviewing browser behavior.
+
+Recorded videos capture everything that happens during the test, including:
+
+- Page navigation
+- Element interactions
+- Clicks and typing
+- UI changes
+
+This feature is commonly used in **CI/CD pipelines and automated testing frameworks**.
+
+---
+
+# Example Test with Video Recording
+
+```python
+from playwright.sync_api import Browser, Page
+import pytest
+
+# Constants
+BASE_URL = "https://playwright.dev/python"
+DOCS_URL = "https://playwright.dev/python/docs/intro"
+
+
+@pytest.fixture()
+def record_video(browser: Browser):
+    context = browser.new_context(
+        record_video_dir="video/"
+    )
+
+    page = context.new_page()
+
+    yield page
+
+    context.close()
+
+
+def test_page_navigation_and_screenshots(record_video: Page):
+
+    # Navigate to Playwright Python homepage
+    record_video.goto(BASE_URL)
+
+    # Toggle dark mode
+    dark_mode_toggle_btn = record_video.locator("button.toggleButton_gllP")
+    dark_mode_toggle_btn.click()
+
+    # Locate navigation links
+    get_started_link = record_video.get_by_role("link", name="GET STARTED")
+    docs_link = record_video.get_by_role("link", name="Docs")
+
+    # Click "GET STARTED"
+    get_started_link.click()
+
+    # Verify navigation
+    assert record_video.url == DOCS_URL
+```
+
+---
+
+# How Video Recording Works
+
+Playwright records videos at the **browser context level**.
+
+```python
+context = browser.new_context(
+    record_video_dir="video/"
+)
+```
+
+This tells Playwright to:
+
+```
+Start recording video
+↓
+Save recording into "video/" folder
+↓
+Stop recording when the context closes
+```
+
+The video is automatically saved when:
+
+```
+context.close()
+```
+
+is executed.
+
+---
+
+# Fixture Explanation
+
+The fixture used in this test automatically manages the browser page and video recording.
+
+```python
+@pytest.fixture()
+def record_video(browser: Browser):
+```
+
+This fixture performs:
+
+### Setup
+
+```
+Create browser context
+Enable video recording
+Open new page
+```
+
+### Test Execution
+
+```
+Test runs using the page object
+```
+
+### Teardown
+
+```
+Close browser context
+Save video file
+```
+
+Using fixtures keeps tests **clean and reusable**.
+
+---
+
+# Video Output Directory
+
+Recorded videos are saved inside the following folder:
+
+```
+project/
+│
+├── video/
+│   └── test_page_navigation_and_screenshots.webm
+│
+├── test_video_recording.py
+└── README.md
+```
+
+Playwright records videos in the **WebM format**.
+
+Example file:
+
+```
+video/test_page_navigation_and_screenshots.webm
+```
+
+---
+
+# Running the Test
+
+Run the test normally with Pytest:
+
+```bash
+pytest test_video_recording.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_video_recording.py .                                    [100%]
+
+1 passed
+```
+
+After execution, a video file will appear in the `video` directory.
+
+---
+
+# Why Video Recording Is Useful
+
+Video recording helps when:
+
+- Debugging failed tests
+- Reviewing UI behavior
+- Investigating flaky tests
+- Monitoring test execution in CI pipelines
+
+Instead of guessing what happened during a test, you can **watch the recorded video**.
+
+---
+
+# Custom Video Options
+
+Playwright also supports additional video configuration.
+
+Example:
+
+```python
+context = browser.new_context(
+    record_video_dir="video/",
+    record_video_size={"width": 1280, "height": 720}
+)
+```
+
+Options available:
+
+| Option | Description |
+|------|-------------|
+| `record_video_dir` | Directory where videos are stored |
+| `record_video_size` | Resolution of the recorded video |
+
+---
+
+# Best Practices
+
+When recording videos in automated tests:
+
+✔ Record videos only for **debugging or CI pipelines**  
+✔ Store videos in a **dedicated folder**  
+✔ Clean old recordings regularly  
+✔ Combine with **screenshots and logs** for full debugging context  
+
+---
+
+# Key Takeaways
+
+✔ Playwright can automatically record test execution videos  
+✔ Videos are recorded at the **browser context level**  
+✔ Recordings are saved when the context closes  
+✔ Videos help debug test failures and UI issues  
+✔ Useful for **automation frameworks and CI/CD environments**
+
+---
+---
+
+# Playwright Tracing (Debugging with Trace Viewer)
+
+Playwright provides a powerful debugging feature called **Tracing**.  
+Tracing records everything that happens during test execution, including:
+
+- Page navigation
+- User interactions
+- DOM snapshots
+- Network requests
+- Console logs
+- Screenshots
+- Source code
+
+The recorded trace can later be opened in the **Playwright Trace Viewer**, which provides a complete visual timeline of the test.
+
+Tracing is extremely useful for:
+
+- Debugging failed tests
+- Investigating flaky tests
+- Understanding automation behavior
+- Reviewing CI/CD test runs
+
+---
+
+# Example Test with Playwright Tracing
+
+```python
+from playwright.sync_api import BrowserContext, Page
+import pytest
+
+# Constants
+BASE_URL = "https://playwright.dev/python"
+DOCS_URL = "https://playwright.dev/python/docs/intro"
+
+
+@pytest.fixture(autouse=True)
+def trace_test(context: BrowserContext):
+
+    context.tracing.start(
+        name="playwright",
+        screenshots=True,
+        snapshots=True,
+        sources=True,
+    )
+
+    yield
+
+    context.tracing.stop(path="traces/trace.zip")
+
+
+def test_page_navigation_and_screenshots(page: Page):
+
+    # Navigate to Playwright homepage
+    page.goto(BASE_URL)
+
+    # Locate navigation links
+    get_started_link = page.get_by_role("link", name="GET STARTED")
+    docs_link = page.get_by_role("link", name="Docs")
+
+    # Click "GET STARTED"
+    get_started_link.click()
+
+    # Verify navigation
+    assert page.url == DOCS_URL
+```
+
+---
+
+# How Playwright Tracing Works
+
+Tracing records the entire test execution timeline.
+
+```
+Test starts
+↓
+Tracing begins
+↓
+Browser actions recorded
+↓
+Screenshots captured
+↓
+DOM snapshots saved
+↓
+Trace file generated
+```
+
+At the end of the test, the trace file is saved as:
+
+```
+traces/trace.zip
+```
+
+---
+
+# Tracing Configuration
+
+Tracing is started using:
+
+```python
+context.tracing.start()
+```
+
+Configuration options used in this example:
+
+```python
+context.tracing.start(
+    name="playwright",
+    screenshots=True,
+    snapshots=True,
+    sources=True
+)
+```
+
+---
+
+# Trace Options Explained
+
+| Option | Description |
+|------|-------------|
+| `screenshots=True` | Captures screenshots during test execution |
+| `snapshots=True` | Records DOM snapshots for each action |
+| `sources=True` | Includes test source code in the trace |
+
+These options allow the trace viewer to reconstruct the **entire test state at every step**.
+
+---
+
+# Stopping the Trace
+
+Tracing must be stopped to generate the trace file.
+
+```python
+context.tracing.stop(path="traces/trace.zip")
+```
+
+This saves the trace archive to:
+
+```
+traces/trace.zip
+```
+
+---
+
+# Fixture Explanation
+
+The tracing fixture runs automatically for every test.
+
+```python
+@pytest.fixture(autouse=True)
+```
+
+This ensures tracing is enabled without modifying individual tests.
+
+### Setup Phase
+
+```
+Start tracing
+```
+
+### Test Execution
+
+```
+Run test normally
+```
+
+### Teardown Phase
+
+```
+Stop tracing
+Save trace file
+```
+
+This pattern ensures **all tests are recorded automatically**.
+
+---
+
+# Project Folder Structure
+
+```
+project/
+│
+├── traces/
+│   └── trace.zip
+│
+├── test_tracing.py
+└── README.md
+```
+
+---
+
+# Running the Test
+
+Run the test normally using Pytest:
+
+```bash
+pytest
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_tracing.py .                                              [100%]
+
+1 passed
+```
+
+After execution, the trace file will appear in:
+
+```
+traces/trace.zip
+```
+
+---
+
+# Viewing the Trace
+
+Playwright provides a built-in **Trace Viewer**.
+
+Open the trace using:
+
+```bash
+playwright show-trace traces/trace.zip
+```
+
+This launches the interactive trace viewer in the browser.
+
+---
+
+# What the Trace Viewer Shows
+
+The trace viewer provides a visual debugging interface including:
+
+- Test timeline
+- Action logs
+- Screenshots
+- DOM snapshots
+- Network requests
+- Source code
+
+You can step through the test **action-by-action** to see exactly what happened.
+
+---
+
+# Why Tracing Is Powerful
+
+Tracing provides far more debugging information than screenshots or logs alone.
+
+Benefits include:
+
+✔ Full test timeline visualization  
+✔ Step-by-step execution replay  
+✔ DOM snapshots for each action  
+✔ Screenshot history  
+✔ Network request inspection  
+
+This makes Playwright tracing one of the **most powerful debugging tools in modern test automation**.
+
+---
+
+# Best Practices
+
+When using tracing in automation frameworks:
+
+✔ Enable tracing in **CI pipelines**  
+✔ Store trace files for failed tests  
+✔ Combine tracing with **screenshots and videos**  
+✔ Clean up old traces periodically  
+
+---
+
+# Key Takeaways
+
+✔ Playwright tracing records complete test execution  
+✔ Traces include screenshots, DOM snapshots, and logs  
+✔ Trace files are saved as `.zip` archives  
+✔ `playwright show-trace` opens the interactive viewer  
+✔ Tracing is one of the best tools for debugging automation tests
+
+---
+---
+
+# Web-First Assertions in Playwright (Assertions on Page)
+
+Playwright provides a powerful assertion system called **Web-First Assertions**.
+
+Unlike traditional assertions that check conditions immediately, **Playwright assertions automatically wait for conditions to become true**.
+
+This makes tests **more reliable and less flaky**, especially when dealing with dynamic web applications.
+
+Web-first assertions are implemented using the `expect` API.
+
+---
+
+# Example Test: Page URL Assertion
+
+```python
+from playwright.sync_api import Page, expect
+
+# Constants
+BASE_URL = "https://playwright.dev/python"
+DOCS_URL = "https://playwright.dev/python/docs/intro"
+
+
+def test_page_navigation_and_screenshots(page: Page):
+
+    # Navigate to Playwright Python homepage
+    page.goto(BASE_URL)
+
+    # Locate "GET STARTED" link
+    get_started_link = page.get_by_role("link", name="GET STARTED")
+
+    # Locate "Docs" navigation link
+    docs_link = page.get_by_role("link", name="Docs")
+
+    # Click "GET STARTED" link
+    get_started_link.click()
+
+    # Verify navigation
+    expect(page).to_have_url(DOCS_URL)
+```
+
+---
+
+# What Are Web-First Assertions?
+
+Web-first assertions automatically **wait for the expected condition** before failing.
+
+Traditional assertion:
+
+```python
+assert page.url == DOCS_URL
+```
+
+Playwright assertion:
+
+```python
+expect(page).to_have_url(DOCS_URL)
+```
+
+Difference:
+
+| Traditional Assertion | Playwright Web-First Assertion |
+|---|---|
+| Executes immediately | Automatically waits |
+| Can fail if page loads slowly | Waits until condition becomes true |
+| More flaky tests | More stable tests |
+
+---
+
+# How the Test Works
+
+### 1. Navigate to Website
+
+```python
+page.goto(BASE_URL)
+```
+
+This opens the Playwright Python homepage.
+
+---
+
+### 2. Locate Page Elements
+
+Playwright uses **role-based selectors**.
+
+```python
+get_started_link = page.get_by_role("link", name="GET STARTED")
+docs_link = page.get_by_role("link", name="Docs")
+```
+
+Role-based locators are recommended because they are:
+
+- stable
+- accessible
+- readable
+
+---
+
+### 3. Perform Interaction
+
+```python
+get_started_link.click()
+```
+
+This simulates a user clicking the **GET STARTED** link.
+
+---
+
+### 4. Verify Navigation with Web-First Assertion
+
+```python
+expect(page).to_have_url(DOCS_URL)
+```
+
+Playwright will:
+
+```
+Wait for the page to navigate
+↓
+Check the current URL
+↓
+Retry automatically if not yet matched
+↓
+Fail only after timeout
+```
+
+Default timeout is **5 seconds**.
+
+---
+
+# Why Web-First Assertions Are Important
+
+Modern web applications are asynchronous.
+
+Examples:
+
+- AJAX requests
+- dynamic content
+- delayed rendering
+- JavaScript frameworks (React, Angular, Vue)
+
+Web-first assertions ensure tests wait for the correct state.
+
+Benefits:
+
+✔ More stable tests  
+✔ Less flaky automation  
+✔ Built-in waiting logic  
+✔ Cleaner test code  
+
+---
+
+# Common Page Assertions
+
+Playwright provides several useful page-level assertions.
+
+| Assertion | Description |
+|---|---|
+| `expect(page).to_have_url()` | Verify page URL |
+| `expect(page).to_have_title()` | Verify page title |
+| `expect(page).to_have_title(re.compile())` | Title pattern match |
+
+Example:
+
+```python
+expect(page).to_have_title("Playwright for Python")
+```
+
+---
+
+# Example: Title Assertion
+
+```python
+expect(page).to_have_title("Playwright for Python")
+```
+
+This verifies that the page title matches the expected value.
+
+---
+
+# Timeout Behavior
+
+Web-first assertions automatically retry until timeout.
+
+Example:
+
+```python
+expect(page).to_have_url(DOCS_URL, timeout=10000)
+```
+
+This sets the timeout to **10 seconds**.
+
+---
+
+# Running the Test
+
+Run the test using Pytest:
+
+```bash
+pytest test_assertions.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_assertions.py .                                      [100%]
+
+1 passed
+```
+
+---
+
+# Key Takeaways
+
+✔ Playwright provides **Web-First Assertions**  
+✔ Assertions automatically wait for conditions  
+✔ `expect()` improves test stability  
+✔ Less flaky automation tests  
+✔ Recommended over traditional `assert` statements  
+
+---
+---
+
+# Web-First Assertions on Elements (Locator Assertions)
+
+Playwright provides **web-first assertions for elements** using the `expect()` API.
+
+These assertions automatically **wait for the expected condition** to become true before failing. This makes tests more reliable when working with dynamic web applications.
+
+Element assertions are typically used to verify:
+
+- Visibility of elements
+- Text content
+- Attributes
+- Input values
+- Element state (enabled, disabled, checked)
+- Element count
+- CSS properties
+
+All element assertions operate on **locators**.
+
+---
+
+# Example Test
+
+```python
+from playwright.sync_api import Page, expect
+
+# Constants
+BASE_URL = "https://playwright.dev/python"
+DOCS_URL = "https://playwright.dev/python/docs/intro"
+
+
+def test_page_navigation_and_screenshots(page: Page):
+
+    # Navigate to Playwright Python homepage
+    page.goto(BASE_URL)
+
+    # Locate elements
+    get_started_link = page.get_by_role("link", name="GET STARTED")
+    docs_link = page.get_by_role("link", name="Docs")
+
+    # Element assertions
+    expect(get_started_link).to_be_visible()
+    expect(docs_link).to_be_visible()
+```
+
+---
+
+# What Are Locator Assertions?
+
+Locator assertions verify the **state or properties of elements** on a webpage.
+
+Example:
+
+```python
+expect(locator).to_be_visible()
+```
+
+Playwright will:
+
+```
+Locate element
+↓
+Wait until visible
+↓
+Pass if visible
+↓
+Fail if timeout reached
+```
+
+Default timeout is **5 seconds**.
+
+---
+
+# Common Locator Assertions
+
+Below are the most frequently used element assertions in Playwright.
+
+---
+
+# Visibility Assertions
+
+### Element is visible
+
+```python
+expect(locator).to_be_visible()
+```
+
+Checks that the element is displayed on the page.
+
+---
+
+### Element is hidden
+
+```python
+expect(locator).to_be_hidden()
+```
+
+Verifies that the element is not visible.
+
+---
+
+# Element State Assertions
+
+### Element is enabled
+
+```python
+expect(locator).to_be_enabled()
+```
+
+Used for buttons or inputs that should be clickable.
+
+---
+
+### Element is disabled
+
+```python
+expect(locator).to_be_disabled()
+```
+
+Checks that the element cannot be interacted with.
+
+---
+
+### Element is editable
+
+```python
+expect(locator).to_be_editable()
+```
+
+Ensures the element accepts user input.
+
+---
+
+### Element is checked (checkbox/radio)
+
+```python
+expect(locator).to_be_checked()
+```
+
+Verifies a checkbox or radio button is selected.
+
+---
+
+# Text Assertions
+
+### Exact text match
+
+```python
+expect(locator).to_have_text("Playwright")
+```
+
+Verifies the element contains exactly the expected text.
+
+---
+
+### Partial text match
+
+```python
+expect(locator).to_contain_text("Playwright")
+```
+
+Verifies the text contains the expected substring.
+
+---
+
+### Multiple elements text
+
+```python
+expect(locator).to_have_text(["Text1", "Text2"])
+```
+
+Used when multiple elements match the locator.
+
+---
+
+# Attribute Assertions
+
+Verify HTML attributes.
+
+```python
+expect(locator).to_have_attribute("href", "/docs/intro")
+```
+
+Example:
+
+```
+<a href="/docs/intro">GET STARTED</a>
+```
+
+---
+
+# Value Assertions (Inputs)
+
+Verify input field values.
+
+```python
+expect(locator).to_have_value("Hello")
+```
+
+Example:
+
+```python
+search_input = page.get_by_placeholder("Search")
+expect(search_input).to_have_value("Playwright")
+```
+
+---
+
+# CSS Assertions
+
+Verify CSS styling.
+
+```python
+expect(locator).to_have_css("display", "block")
+```
+
+Example:
+
+```python
+expect(locator).to_have_css("color", "rgb(0, 0, 0)")
+```
+
+---
+
+# Element Count Assertions
+
+Verify number of matching elements.
+
+```python
+expect(locator).to_have_count(3)
+```
+
+Example:
+
+```python
+items = page.locator(".menu-item")
+expect(items).to_have_count(5)
+```
+
+---
+
+# Class Assertions
+
+Verify CSS class names.
+
+```python
+expect(locator).to_have_class("active")
+```
+
+Example:
+
+```python
+expect(button).to_have_class("btn-primary")
+```
+
+---
+
+# Focus Assertions
+
+Verify element focus.
+
+```python
+expect(locator).to_be_focused()
+```
+
+Example:
+
+```python
+search_input.click()
+expect(search_input).to_be_focused()
+```
+
+---
+
+# Screenshot Assertion
+
+Playwright can verify UI appearance using screenshot comparison.
+
+```python
+expect(locator).to_have_screenshot()
+```
+
+This is useful for **visual regression testing**.
+
+---
+
+# Timeout Customization
+
+All assertions support custom timeouts.
+
+Example:
+
+```python
+expect(locator).to_be_visible(timeout=10000)
+```
+
+This waits up to **10 seconds**.
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_assertions.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_assertions.py .                         [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices for Assertions
+
+✔ Prefer **web-first assertions** over manual `assert`  
+✔ Use **locators instead of raw selectors**  
+✔ Keep assertions **simple and focused**  
+✔ Verify both **UI state and behavior**  
+
+---
+
+# Key Takeaways
+
+✔ Playwright provides powerful **element assertions**  
+✔ Assertions automatically wait for expected conditions  
+✔ Helps prevent flaky tests  
+✔ Supports text, attributes, values, CSS, and visibility checks  
+✔ Essential for building reliable automation frameworks
+
+---
+---
+
+# Web-First Assertions on Element Text
+
+In Playwright, text-based assertions allow you to verify that elements contain the expected text content.
+
+Playwright provides powerful text assertions through the `expect()` API that automatically **wait for text to appear before failing the test**. This helps reduce flaky tests caused by dynamic content loading.
+
+Text assertions are commonly used to verify:
+
+- Navigation menus
+- Page headings
+- Dropdown options
+- Button labels
+- Dynamic UI messages
+
+---
+
+# Example Test
+
+```python
+from playwright.sync_api import Page, expect
+
+# Constants
+BASE_URL = "https://playwright.dev/python"
+DOCS_URL = "https://playwright.dev/python/docs/intro"
+
+
+def test_page_navigation_and_screenshots(page: Page):
+
+    # Navigate to Playwright Python homepage
+    page.goto(BASE_URL)
+
+    dropdown_menu = page.locator("ul.dropdown__menu")
+
+    expect(dropdown_menu).to_contain_text("Python")
+    expect(dropdown_menu).to_contain_text("Java")
+    expect(dropdown_menu).to_contain_text("Node.js")
+    expect(dropdown_menu).to_contain_text(".NET")
+```
+
+---
+
+# What This Test Verifies
+
+This test checks that the **language dropdown menu contains expected programming language options**.
+
+The test verifies that the menu includes:
+
+- Python
+- Java
+- Node.js
+- .NET
+
+Each assertion confirms that the specified text appears somewhere inside the dropdown element.
+
+---
+
+# How `to_contain_text()` Works
+
+```python
+expect(locator).to_contain_text("Python")
+```
+
+Playwright will:
+
+```
+Locate the element
+↓
+Wait until the text appears
+↓
+Verify that the element contains the text
+↓
+Fail only after timeout if not found
+```
+
+Default timeout: **5 seconds**
+
+---
+
+# Exact Text Assertion
+
+To verify **exact text**, use `to_have_text()`.
+
+Example:
+
+```python
+expect(locator).to_have_text("Python")
+```
+
+Difference:
+
+| Assertion | Behavior |
+|---|---|
+| `to_contain_text()` | Checks if text exists anywhere inside element |
+| `to_have_text()` | Checks for exact text match |
+
+Example:
+
+```python
+expect(page.locator("h1")).to_have_text("Playwright")
+```
+
+---
+
+# Partial Text Matching
+
+`to_contain_text()` allows checking partial matches.
+
+Example:
+
+```python
+expect(locator).to_contain_text("Play")
+```
+
+This will pass if the element contains:
+
+```
+Playwright
+Play
+Playing
+```
+
+---
+
+# Regular Expression Text Matching
+
+Playwright supports **regex-based text assertions**.
+
+Example:
+
+```python
+import re
+
+expect(locator).to_have_text(re.compile("Playwright"))
+```
+
+Example with case-insensitive match:
+
+```python
+expect(locator).to_have_text(re.compile("playwright", re.IGNORECASE))
+```
+
+---
+
+# Assertions on Multiple Elements
+
+If a locator matches multiple elements, Playwright can verify the text list.
+
+Example:
+
+```python
+menu_items = page.locator("ul.dropdown__menu li")
+
+expect(menu_items).to_have_text([
+    "Python",
+    "Java",
+    "Node.js",
+    ".NET"
+])
+```
+
+This verifies the exact order of elements.
+
+---
+
+# Timeout Configuration
+
+You can increase the waiting time for text assertions.
+
+Example:
+
+```python
+expect(locator).to_contain_text("Python", timeout=10000)
+```
+
+This waits **10 seconds** before failing.
+
+---
+
+# Why Text Assertions Are Important
+
+Text assertions are widely used in UI automation for verifying:
+
+- Menu options
+- Form labels
+- Notifications
+- Error messages
+- Dynamic content
+
+They ensure the **correct information is displayed to users**.
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_text_assertions.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_text_assertions.py .                     [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices
+
+When verifying text in automation tests:
+
+✔ Prefer `to_contain_text()` for flexible matching  
+✔ Use `to_have_text()` for exact matches  
+✔ Use regex for complex patterns  
+✔ Keep assertions focused and readable  
+
+---
+
+# Key Takeaways
+
+✔ Playwright provides powerful text assertions  
+✔ Assertions automatically wait for expected text  
+✔ Supports exact, partial, and regex text matching  
+✔ Works for single elements and multiple elements  
+✔ Helps verify UI content reliably
+
+---
+---
+
+# Web-First Assertions on Element Attributes
+
+Playwright allows you to verify **HTML attributes of elements** using web-first assertions.
+
+Attributes provide important information about elements, such as:
+
+- Links (`href`)
+- Images (`src`)
+- Input types (`type`)
+- Accessibility labels (`aria-*`)
+- CSS classes (`class`)
+- Identifiers (`id`)
+
+Playwright provides the assertion:
+
+```
+expect(locator).to_have_attribute()
+```
+
+This assertion automatically waits until the attribute value matches the expected value.
+
+---
+
+# Example Test
+
+```python
+from playwright.sync_api import Page, expect
+
+# Constants
+BASE_URL = "https://playwright.dev/python"
+DOCS_URL = "https://playwright.dev/python/docs/intro"
+
+
+def test_page_navigation_and_screenshots(page: Page):
+
+    # Navigate to Playwright Python homepage
+    page.goto(BASE_URL)
+
+    docs_link = page.get_by_role("link", name="DOCS")
+
+    expect(docs_link).to_have_attribute(
+        "href", "/python/docs/intro"
+    )
+```
+
+---
+
+# What This Test Verifies
+
+This test checks that the **Docs navigation link** contains the correct `href` attribute.
+
+Example HTML element:
+
+```
+<a href="/python/docs/intro">Docs</a>
+```
+
+The assertion verifies that:
+
+```
+href="/python/docs/intro"
+```
+
+is present.
+
+---
+
+# How `to_have_attribute()` Works
+
+```python
+expect(locator).to_have_attribute("href", "/python/docs/intro")
+```
+
+Playwright performs the following steps:
+
+```
+Locate element
+↓
+Wait until element exists
+↓
+Retrieve attribute value
+↓
+Compare with expected value
+↓
+Retry until timeout if mismatch
+```
+
+Default timeout: **5 seconds**
+
+---
+
+# Common Attribute Assertions
+
+Below are common attribute checks used in UI automation.
+
+---
+
+# Verify Link URL
+
+```python
+expect(link).to_have_attribute("href", "/docs/intro")
+```
+
+Used to verify navigation links.
+
+---
+
+# Verify Image Source
+
+```python
+image = page.locator("img.logo")
+
+expect(image).to_have_attribute("src", "/images/logo.png")
+```
+
+Ensures the correct image is displayed.
+
+---
+
+# Verify Input Type
+
+```python
+email_input = page.locator("input#email")
+
+expect(email_input).to_have_attribute("type", "email")
+```
+
+Ensures the correct input type is used.
+
+---
+
+# Verify Element ID
+
+```python
+expect(locator).to_have_attribute("id", "main-menu")
+```
+
+Useful when validating page structure.
+
+---
+
+# Verify CSS Class
+
+```python
+expect(locator).to_have_attribute("class", "active")
+```
+
+Alternatively, Playwright provides a dedicated class assertion:
+
+```python
+expect(locator).to_have_class("active")
+```
+
+---
+
+# Verify ARIA Attributes
+
+Accessibility attributes can also be tested.
+
+Example:
+
+```python
+expect(locator).to_have_attribute("aria-label", "Search")
+```
+
+These attributes improve accessibility for screen readers.
+
+---
+
+# Regex Attribute Matching
+
+Playwright supports **regular expressions** for flexible matching.
+
+Example:
+
+```python
+import re
+
+expect(locator).to_have_attribute(
+    "href",
+    re.compile("/docs/")
+)
+```
+
+This passes if the attribute contains `/docs/`.
+
+---
+
+# Timeout Configuration
+
+Attribute assertions can use custom timeouts.
+
+Example:
+
+```python
+expect(locator).to_have_attribute(
+    "href",
+    "/docs/intro",
+    timeout=10000
+)
+```
+
+This waits **10 seconds** before failing.
+
+---
+
+# Running the Test
+
+Run the test using Pytest:
+
+```bash
+pytest test_attribute_assertions.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_attribute_assertions.py .          [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices
+
+When verifying element attributes:
+
+✔ Use attribute assertions for **links and navigation validation**  
+✔ Combine with **visibility assertions** for stronger tests  
+✔ Prefer **regex matching for dynamic values**  
+✔ Keep assertions clear and focused  
+
+---
+
+# Key Takeaways
+
+✔ Playwright can verify element attributes using `to_have_attribute()`  
+✔ Assertions automatically wait for the expected value  
+✔ Works with links, images, inputs, and accessibility attributes  
+✔ Supports exact matching and regex patterns  
+✔ Essential for validating UI behavior and navigation
+
+---
+---
+
+# Web-First Assertions on Input Fields
+
+Playwright provides powerful assertions for verifying **input field behavior and values**.  
+These assertions are useful when testing:
+
+- Search fields
+- Login forms
+- Text inputs
+- Dynamic form elements
+
+Using Playwright's **web-first assertions**, tests automatically wait for the expected condition before failing.
+
+Common input field assertions include:
+
+- `to_be_editable()`
+- `to_be_empty()`
+- `to_have_value()`
+- `to_be_visible()`
+- `to_be_hidden()`
+
+---
+
+# Example Test
+
+```python
+from playwright.sync_api import Page, expect
+
+# Constants
+BASE_URL = "https://playwright.dev/python"
+DOCS_URL = "https://playwright.dev/python/docs/intro"
+
+
+def test_get_started_link(page: Page):
+
+    # Navigate to Playwright Python homepage
+    page.goto(BASE_URL)
+
+    input = page.get_by_placeholder("Search docs")
+
+    # Input is hidden before clicking search
+    expect(input).to_be_hidden()
+
+    # Search button
+    search_btn = page.get_by_role("button", name="Search")
+    search_btn.click()
+
+    # Search menu should appear
+    expect(input).to_be_editable()
+    expect(input).to_be_empty()
+
+    text = "Assertions"
+
+    input.fill(text)
+
+    expect(input).to_have_value(text)
+```
+
+---
+
+# What This Test Verifies
+
+This test validates the behavior of the **Playwright documentation search input field**.
+
+The test performs the following checks:
+
+1. The search input field is initially **hidden**
+2. Clicking the **Search button** opens the search input
+3. The input becomes **editable**
+4. The input is **initially empty**
+5. The user enters text into the field
+6. The entered value is verified
+
+---
+
+# Locating the Input Field
+
+The input field is located using a **placeholder locator**.
+
+```python
+input = page.get_by_placeholder("Search docs")
+```
+
+This method identifies input elements using their placeholder text.
+
+Example HTML:
+
+```
+<input placeholder="Search docs">
+```
+
+---
+
+# Input Visibility Assertion
+
+Before clicking the search button, the input field is hidden.
+
+```python
+expect(input).to_be_hidden()
+```
+
+This ensures the search input is not visible initially.
+
+---
+
+# Triggering the Search Menu
+
+The search button is located using a **role locator**.
+
+```python
+search_btn = page.get_by_role("button", name="Search")
+```
+
+Clicking the button opens the search UI.
+
+```python
+search_btn.click()
+```
+
+---
+
+# Editable Input Assertion
+
+After clicking the search button, the input becomes editable.
+
+```python
+expect(input).to_be_editable()
+```
+
+This confirms the user can type into the input field.
+
+---
+
+# Empty Input Assertion
+
+The input field should initially be empty.
+
+```python
+expect(input).to_be_empty()
+```
+
+This verifies the input field contains no text.
+
+---
+
+# Filling Text into Input
+
+Playwright allows filling text using:
+
+```python
+input.fill(text)
+```
+
+Example:
+
+```python
+text = "Assertions"
+input.fill(text)
+```
+
+---
+
+# Verifying Input Value
+
+After filling the text, the test verifies the value using:
+
+```python
+expect(input).to_have_value(text)
+```
+
+This ensures the input field contains the correct text.
+
+---
+
+# Additional Input Assertions
+
+Playwright provides several useful assertions for input elements.
+
+---
+
+# Check Input Visibility
+
+```python
+expect(input).to_be_visible()
+```
+
+---
+
+# Check Input is Disabled
+
+```python
+expect(input).to_be_disabled()
+```
+
+---
+
+# Check Input is Enabled
+
+```python
+expect(input).to_be_enabled()
+```
+
+---
+
+# Verify Partial Value
+
+```python
+expect(input).to_have_value("Assert")
+```
+
+---
+
+# Regex Value Assertion
+
+Playwright supports regular expression matching.
+
+```python
+import re
+
+expect(input).to_have_value(re.compile("Assert"))
+```
+
+---
+
+# Timeout Configuration
+
+You can extend the waiting time for assertions.
+
+Example:
+
+```python
+expect(input).to_have_value("Assertions", timeout=10000)
+```
+
+This waits **10 seconds** before failing.
+
+---
+
+# Running the Test
+
+Run the test using Pytest:
+
+```bash
+pytest test_input_assertions.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_input_assertions.py .                    [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices
+
+When testing input fields:
+
+✔ Verify **initial state of the input**  
+✔ Check that input becomes **editable when expected**  
+✔ Validate **input values after user interaction**  
+✔ Use placeholder locators for better readability  
+
+---
+
+# Key Takeaways
+
+✔ Playwright supports powerful **input field assertions**  
+✔ Tests can verify input visibility, editability, and values  
+✔ Assertions automatically wait for expected conditions  
+✔ Useful for testing search fields, login forms, and user inputs
+
+---
+---
+
+# Web-First Assertions for Checkboxes
+
+Checkboxes are common UI components used in forms, settings pages, and configuration panels.  
+Playwright provides built-in assertions to verify whether checkboxes are **checked or unchecked**.
+
+These assertions are part of Playwright's **web-first assertions**, meaning they automatically wait until the expected state is reached before failing.
+
+Common checkbox assertions include:
+
+- `to_be_checked()`
+- `not_to_be_checked()`
+
+These assertions help verify the correct behavior of form inputs and user selections.
+
+---
+
+# Example Test
+
+```python
+from playwright.sync_api import Page, expect
+
+# Constants
+BASE_URL = "https://bootswatch.com/default"
+
+
+def test_get_started_link(page: Page):
+
+    # Navigate to the webpage
+    page.goto(BASE_URL)
+
+    default_checkbox = page.get_by_label("Default Checkbox")
+    checked_checkbox = page.get_by_label("Checked checkbox")
+
+    expect(checked_checkbox).to_be_checked()
+
+    expect(default_checkbox).not_to_be_checked()
+```
+
+---
+
+# What This Test Verifies
+
+This test checks the default state of two checkboxes on the page.
+
+The test verifies:
+
+| Checkbox | Expected State |
+|--------|--------|
+| Checked checkbox | Checked |
+| Default Checkbox | Not checked |
+
+---
+
+# Locating Checkboxes
+
+Checkboxes are located using **label locators**.
+
+```python
+default_checkbox = page.get_by_label("Default Checkbox")
+```
+
+Example HTML structure:
+
+```
+<label>
+    <input type="checkbox"> Default Checkbox
+</label>
+```
+
+Using `get_by_label()` is recommended because it is:
+
+✔ Accessible  
+✔ Stable  
+✔ Readable  
+
+---
+
+# Assertion: Checkbox is Checked
+
+```python
+expect(checked_checkbox).to_be_checked()
+```
+
+This verifies that the checkbox is selected.
+
+Playwright automatically waits for the checkbox to become checked before failing.
+
+---
+
+# Assertion: Checkbox is Not Checked
+
+```python
+expect(default_checkbox).not_to_be_checked()
+```
+
+This ensures the checkbox is **not selected**.
+
+The `not_` prefix negates the assertion.
+
+---
+
+# Checkbox Interaction Example
+
+Checkboxes can be clicked and verified.
+
+Example:
+
+```python
+checkbox = page.get_by_label("Default Checkbox")
+
+checkbox.check()
+
+expect(checkbox).to_be_checked()
+```
+
+---
+
+# Unchecking a Checkbox
+
+Playwright also allows unchecking checkboxes.
+
+```python
+checkbox.uncheck()
+
+expect(checkbox).not_to_be_checked()
+```
+
+---
+
+# Toggle Checkbox State
+
+Sometimes a checkbox needs to be toggled.
+
+Example:
+
+```python
+checkbox.click()
+
+expect(checkbox).to_be_checked()
+```
+
+---
+
+# Verifying Multiple Checkboxes
+
+If multiple checkboxes exist, they can be verified individually.
+
+Example:
+
+```python
+checkboxes = page.locator("input[type='checkbox']")
+
+expect(checkboxes).to_have_count(3)
+```
+
+---
+
+# Timeout Configuration
+
+Checkbox assertions support custom timeout values.
+
+Example:
+
+```python
+expect(checkbox).to_be_checked(timeout=10000)
+```
+
+This waits **10 seconds** before failing.
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_checkbox_assertions.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_checkbox_assertions.py .                [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices
+
+When testing checkboxes:
+
+✔ Use **label locators** instead of CSS selectors  
+✔ Verify **default checkbox state**  
+✔ Test both **checked and unchecked states**  
+✔ Use Playwright's `check()` and `uncheck()` methods  
+
+---
+
+# Key Takeaways
+
+✔ Playwright provides assertions for checkbox states  
+✔ `to_be_checked()` verifies selected checkboxes  
+✔ `not_to_be_checked()` verifies unselected checkboxes  
+✔ Assertions automatically wait for the expected state  
+✔ Useful for testing forms and user input validation
+
+---
+---
+
+# Web-First Assertions for Option Menus (Select Dropdowns)
+
+Dropdown menus are widely used in web applications for selecting options from a list.  
+Playwright provides built-in assertions to verify the **selected value(s) of dropdown menus**.
+
+These assertions are part of Playwright's **web-first assertion system**, meaning they automatically wait until the expected value appears before failing the test.
+
+Dropdown assertions are commonly used to verify:
+
+- Default selected options
+- User-selected values
+- Multi-select behavior
+- Form input correctness
+
+Playwright provides the following assertion methods for dropdown menus:
+
+- `to_have_value()` → for single-select dropdowns  
+- `to_have_values()` → for multi-select dropdowns  
+
+---
+
+# Example Test
+
+```python
+from playwright.sync_api import Page, expect
+
+# Constants
+BASE_URL = "https://bootswatch.com/default"
+
+
+def test_app(page: Page):
+
+    # Navigate to the webpage
+    page.goto(BASE_URL)
+
+    option_menu = page.get_by_label("Example select")
+
+    expect(option_menu).to_have_value("1")
+
+    multi_select_option_menu = page.get_by_label("Example multiple select")
+
+    expect(multi_select_option_menu).to_have_values([])
+
+    selected_options = ["2", "4"]
+
+    multi_select_option_menu.select_option(selected_options)
+
+    expect(multi_select_option_menu).to_have_values(selected_options)
+```
+
+---
+
+# What This Test Verifies
+
+This test validates the behavior of **single-select and multi-select dropdown menus**.
+
+The test checks:
+
+1. The **default selected option** in a single dropdown
+2. The **initial state of a multi-select dropdown**
+3. Selecting multiple options
+4. Verifying the selected values
+
+---
+
+# Locating Dropdown Menus
+
+Dropdown elements are located using **label-based locators**.
+
+```python
+option_menu = page.get_by_label("Example select")
+```
+
+Example HTML:
+
+```
+<label for="example-select">Example select</label>
+<select id="example-select">
+    <option value="1">Option 1</option>
+</select>
+```
+
+Using `get_by_label()` improves:
+
+✔ Accessibility  
+✔ Test readability  
+✔ Locator stability  
+
+---
+
+# Assertion: Single Select Dropdown
+
+Single dropdowns contain **one selected value**.
+
+```python
+expect(option_menu).to_have_value("1")
+```
+
+This verifies that the selected option has the value `"1"`.
+
+Example HTML:
+
+```
+<option value="1" selected>Option 1</option>
+```
+
+---
+
+# Assertion: Multi-Select Dropdown
+
+Multi-select dropdowns allow multiple values to be selected.
+
+Example assertion:
+
+```python
+expect(multi_select_option_menu).to_have_values([])
+```
+
+This verifies that **no options are selected initially**.
+
+---
+
+# Selecting Multiple Options
+
+Playwright allows selecting multiple options using:
+
+```python
+multi_select_option_menu.select_option(["2", "4"])
+```
+
+This selects options with values:
+
+```
+2
+4
+```
+
+---
+
+# Verify Selected Options
+
+After selecting options, we verify them using:
+
+```python
+expect(multi_select_option_menu).to_have_values(["2", "4"])
+```
+
+This ensures the correct options are selected.
+
+---
+
+# Selecting Options by Label
+
+Playwright can also select options by visible label.
+
+Example:
+
+```python
+dropdown.select_option(label="Option 1")
+```
+
+---
+
+# Selecting Options by Index
+
+Example:
+
+```python
+dropdown.select_option(index=2)
+```
+
+This selects the third option in the list.
+
+---
+
+# Clearing Selected Options
+
+For multi-select dropdowns, you can clear selections.
+
+Example:
+
+```python
+dropdown.select_option([])
+```
+
+Then verify:
+
+```python
+expect(dropdown).to_have_values([])
+```
+
+---
+
+# Timeout Configuration
+
+Dropdown assertions support custom timeouts.
+
+Example:
+
+```python
+expect(option_menu).to_have_value("1", timeout=10000)
+```
+
+This waits **10 seconds** before failing.
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_dropdown_assertions.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_dropdown_assertions.py .            [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices
+
+When testing dropdown menus:
+
+✔ Verify **default selected values**  
+✔ Test **user interactions with dropdowns**  
+✔ Validate **multi-select behavior**  
+✔ Use `get_by_label()` for reliable locators  
+
+---
+
+# Key Takeaways
+
+✔ Playwright supports assertions for dropdown menus  
+✔ `to_have_value()` verifies single select dropdowns  
+✔ `to_have_values()` verifies multi-select dropdowns  
+✔ Tests can validate both default and selected values  
+✔ Useful for testing forms and user selections
+
+---
