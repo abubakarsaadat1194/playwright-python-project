@@ -120,6 +120,58 @@
 
 - [Pytest JSON Test Report Generator](#pytest-json-test-report-generator)
 - [Writing Tests with Pytest](#writing-tests-with-pytest)
+- [Running Tests with Configuration](#running-tests-with-configuration)
+- [Benefits of Using pytest.ini](#benefits-of-using-pytestini)
+- [Example Project Structure](#example-project-structure)
+- [Overriding pytest.ini Options](#overriding-pytestini-options)
+
+---
+
+## Pytest Fixtures and Test Hooks
+
+- [Test Hooks and Fixtures in Pytest](#test-hooks-and-fixtures-in-pytest-playwright)
+
+---
+
+## Debugging and Test Artifacts
+
+- [Taking Screenshots with Playwright](#taking-screenshots-with-playwright)
+- [Recording Test Videos with Playwright](#recording-test-videos-with-playwright)
+- [Playwright Tracing (Debugging with Trace Viewer)](#playwright-tracing-debugging-with-trace-viewer)
+
+---
+
+## Playwright Web-First Assertions
+
+- [Web-First Assertions on Page](#web-first-assertions-in-playwright-assertions-on-page)
+- [Web-First Assertions on Elements](#web-first-assertions-on-elements-locator-assertions)
+- [Web-First Assertions on Element Text](#web-first-assertions-on-element-text)
+- [Web-First Assertions on Element Attributes](#web-first-assertions-on-element-attributes)
+- [Web-First Assertions on Input Fields](#web-first-assertions-on-input-fields)
+- [Web-First Assertions for Checkboxes](#web-first-assertions-for-checkboxes)
+- [Web-First Assertions for Option Menus](#web-first-assertions-for-option-menus-select-dropdowns)
+
+---
+
+## UI Testing Playground Automation Scenarios
+
+- [Overlapped Element Handling](#ui-testing-playground--overlapped-element-handling)
+- [Handling AJAX Requests](#ui-testing-playground--handling-ajax-requests)
+- [Sample App Login Automation](#ui-testing-playground--sample-app-login-form-automation)
+- [Handling Dynamic Class Attributes](#ui-testing-playground--handling-dynamic-class-attributes)
+- [Handling Dynamic IDs](#ui-testing-playground--handling-dynamic-ids)
+- [Dynamic Table Validation](#ui-testing-playground--dynamic-table-validation)
+- [Hidden Layers (Click Interception)](#ui-testing-playground--hidden-layers-click-interception)
+- [Load Delay (Handling Delayed Elements)](#ui-testing-playground--load-delay-handling-delayed-elements)
+- [Mouse Over Interactions](#ui-testing-playground--mouse-over-hover--double-click-actions)
+- [Handling Non-Breaking Space](#ui-testing-playground--non-breaking-space-handling-special-characters-in-locators)
+- [Progress Bar Handling](#ui-testing-playground--progress-bar-handling-dynamic-ui-updates)
+- [Scrollbars (Handling Elements Outside Viewport)](#ui-testing-playground--scrollbars-handling-elements-outside-the-viewport)
+- [Text Input Dynamic UI Updates](#ui-testing-playground--text-input-dynamic-ui-update)
+- [Click Event Handling](#ui-testing-playground--click-handling-real-user-click-events)
+- [Visibility States Testing](#ui-testing-playground--visibility-understanding-different-hidden-element-states)
+
+---
 # Playwright Python Setup Guide
 
 This guide explains how to install and configure **Playwright with Python** on macOS.
@@ -10709,5 +10761,3573 @@ When testing dropdown menus:
 ✔ `to_have_values()` verifies multi-select dropdowns  
 ✔ Tests can validate both default and selected values  
 ✔ Useful for testing forms and user selections
+
+---
+---
+
+# UI Testing Playground – Overlapped Element Handling
+
+The **UI Testing Playground** is a website designed specifically for practicing automation testing scenarios.
+
+Website:
+
+```
+http://uitestingplayground.com
+```
+
+It contains several tricky UI situations that commonly appear in **automation testing interviews**, including:
+
+- Dynamic IDs
+- Overlapped elements
+- Delayed AJAX responses
+- Hidden elements
+- Scrollable elements
+- Shadow DOM
+- Click interception issues
+
+Automation engineers often use this site to demonstrate their ability to **handle complex UI behaviors**.
+
+---
+
+# Overlapped Element Scenario
+
+One common automation challenge occurs when an element is **partially hidden or overlapped by another element**.
+
+This can cause automation failures such as:
+
+```
+Element is not clickable
+Element is not visible
+Element is outside viewport
+```
+
+To interact with such elements, testers may need to:
+
+- Scroll the page
+- Hover over containers
+- Use JavaScript scrolling
+- Use Playwright mouse actions
+
+---
+
+# Example Test: Handling Overlapped Input Field
+
+```python
+from playwright.sync_api import Page, expect
+
+
+def test_fill_input_field_with_overlapped_element(page: Page):
+
+    # Navigate to UI Testing Playground
+    page.goto("http://uitestingplayground.com/")
+
+    # Open the Overlapped Element page
+    overlapped_element_link = page.get_by_role("link", name="Overlapped Element")
+    overlapped_element_link.click()
+
+    # Locate the input field
+    name_input = page.get_by_placeholder("Name")
+
+    # Hover over the container element to bring it into focus
+    scroll_container = name_input.locator("..")
+    scroll_container.hover()
+
+    # Scroll the page using mouse wheel
+    page.mouse.wheel(0, 200)
+
+    # Enter test data
+    test_data = "python"
+    name_input.fill(test_data)
+
+    # Verify the input value
+    expect(name_input).to_have_value(test_data)
+```
+
+---
+
+# What This Test Demonstrates
+
+This test demonstrates how to handle **overlapped UI elements** in automation.
+
+Steps performed:
+
+1. Open the UI Testing Playground homepage
+2. Navigate to the **Overlapped Element** scenario
+3. Locate the hidden input field
+4. Scroll the page to reveal the input element
+5. Enter text into the input field
+6. Verify that the correct value was entered
+
+---
+
+# Locating the Input Field
+
+The input field is located using a **placeholder locator**.
+
+```python
+name_input = page.get_by_placeholder("Name")
+```
+
+Example HTML:
+
+```
+<input placeholder="Name">
+```
+
+Placeholder locators are useful for identifying form inputs.
+
+---
+
+# Handling Overlapped Elements
+
+The input field is inside a **scrollable container**.
+
+To interact with it, we first locate the parent container:
+
+```python
+scroll_container = name_input.locator("..")
+```
+
+The `".."` locator selects the **parent element**.
+
+---
+
+# Hovering Over the Container
+
+Hovering ensures the element receives focus.
+
+```python
+scroll_container.hover()
+```
+
+This mimics real user interaction.
+
+---
+
+# Scrolling the Page
+
+Playwright allows simulating mouse scrolling.
+
+```python
+page.mouse.wheel(0, 200)
+```
+
+Parameters:
+
+```
+mouse.wheel(x, y)
+```
+
+| Parameter | Description |
+|---|---|
+| x | Horizontal scroll |
+| y | Vertical scroll |
+
+In this example:
+
+```
+Scroll down 200 pixels
+```
+
+---
+
+# Filling the Input Field
+
+Once the element is visible, we can enter text.
+
+```python
+name_input.fill("python")
+```
+
+This simulates user typing.
+
+---
+
+# Verifying the Input Value
+
+Playwright verifies that the correct value was entered.
+
+```python
+expect(name_input).to_have_value("python")
+```
+
+Web-first assertions ensure the test waits until the value appears.
+
+---
+
+# Common Automation Problems with Overlapped Elements
+
+Automation frameworks often fail when elements are:
+
+- hidden
+- overlapped
+- outside the viewport
+- blocked by floating headers
+
+Typical error messages include:
+
+```
+Element not visible
+Element not clickable
+Timeout exceeded
+```
+
+Playwright solves these issues using:
+
+- automatic waiting
+- scrolling
+- hover actions
+- locator-based interaction
+
+---
+
+# Alternative Scrolling Methods
+
+Playwright also supports other scrolling techniques.
+
+### Scroll element into view
+
+```python
+locator.scroll_into_view_if_needed()
+```
+
+---
+
+### JavaScript scroll
+
+```python
+page.evaluate("window.scrollBy(0, 200)")
+```
+
+---
+
+### Keyboard scrolling
+
+```python
+page.keyboard.press("PageDown")
+```
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```
+pytest test_overlapped_element.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_overlapped_element.py .                 [100%]
+
+1 passed
+```
+
+---
+
+# Why UI Testing Playground is Important
+
+UI Testing Playground is commonly used in **automation interviews** because it tests the candidate's ability to handle:
+
+- tricky UI behaviors
+- dynamic elements
+- asynchronous content
+- scrolling issues
+- locator strategies
+
+Many automation engineers practice on this site to improve their **Playwright and Selenium debugging skills**.
+
+---
+
+# Key Takeaways
+
+✔ UI Testing Playground is a popular automation practice website  
+✔ Overlapped elements may require scrolling or hovering  
+✔ Playwright mouse actions help reveal hidden elements  
+✔ Web-first assertions verify the correct interaction  
+✔ Handling complex UI behavior is a key automation testing skill
+
+---
+---
+
+# UI Testing Playground – Handling AJAX Requests
+
+Modern web applications frequently use **AJAX (Asynchronous JavaScript and XML)** to load data dynamically without refreshing the entire page.
+
+In automation testing, AJAX can cause challenges because:
+
+- Elements appear **after a delay**
+- Content loads **asynchronously**
+- The UI updates **after network requests**
+
+If tests try to interact with elements **before the AJAX request finishes**, they may fail with errors such as:
+
+```
+Element not found
+Timeout exceeded
+Element not visible
+```
+
+Playwright solves this problem using **automatic waiting and web-first assertions**.
+
+The **UI Testing Playground AJAX Data scenario** is commonly used in automation interviews to test how engineers handle delayed content.
+
+Website:
+
+```
+http://uitestingplayground.com/ajax
+```
+
+---
+
+# Example Test: Handling AJAX Data Loading
+
+```python
+from playwright.sync_api import Page, expect
+import pytest
+
+
+def test_ajax_data_loading(page: Page):
+
+    # Navigate to UI Testing Playground
+    page.goto("http://uitestingplayground.com/")
+
+    # Open the AJAX Data scenario
+    ajax_data_link = page.get_by_role("link", name="AJAX Data")
+    ajax_data_link.click()
+
+    # Button that triggers the AJAX request
+    ajax_button = page.get_by_role("button", name="Button Triggering AJAX Request")
+
+    ajax_button.click()
+
+    # Confirmation text that appears after the AJAX request completes
+    confirmation_text = page.locator("p.bg-success")
+
+    # Wait until the element becomes visible
+    confirmation_text.wait_for(state="visible")
+
+    # Verify the element is visible
+    expect(confirmation_text).to_be_visible()
+```
+
+---
+
+# What This Test Demonstrates
+
+This test demonstrates how to handle **delayed UI elements caused by AJAX requests**.
+
+Steps performed:
+
+1. Navigate to the **UI Testing Playground homepage**
+2. Open the **AJAX Data example**
+3. Click the button that triggers an AJAX request
+4. Wait for the confirmation message to appear
+5. Verify that the message becomes visible
+
+---
+
+# AJAX Behavior on This Page
+
+When the button is clicked:
+
+```
+Button clicked
+↓
+AJAX request sent to server
+↓
+Server processes request
+↓
+Response returned after delay
+↓
+Confirmation message appears
+```
+
+This delay simulates real-world web applications where data loads asynchronously.
+
+---
+
+# Locating the AJAX Trigger Button
+
+The button is located using a **role locator**.
+
+```python
+ajax_button = page.get_by_role(
+    "button",
+    name="Button Triggering AJAX Request"
+)
+```
+
+This is a reliable and readable locator.
+
+---
+
+# Waiting for the AJAX Response
+
+The confirmation message appears after the AJAX request completes.
+
+```python
+confirmation_text = page.locator("p.bg-success")
+```
+
+Example HTML:
+
+```
+<p class="bg-success">
+    Data loaded with AJAX get request.
+</p>
+```
+
+---
+
+# Explicit Waiting
+
+The test waits for the element to become visible.
+
+```python
+confirmation_text.wait_for(state="visible")
+```
+
+This ensures the test does not proceed until the UI updates.
+
+Available states:
+
+| State | Description |
+|------|-------------|
+| visible | Element appears on screen |
+| hidden | Element becomes hidden |
+| attached | Element added to DOM |
+| detached | Element removed from DOM |
+
+---
+
+# Assertion
+
+Finally, the test verifies the element is visible.
+
+```python
+expect(confirmation_text).to_be_visible()
+```
+
+Playwright's **web-first assertions automatically retry** until the condition becomes true.
+
+---
+
+# Alternative Waiting Strategies
+
+Playwright provides multiple ways to handle AJAX delays.
+
+---
+
+# 1. Web-First Assertion (Recommended)
+
+Playwright automatically waits:
+
+```python
+expect(confirmation_text).to_be_visible()
+```
+
+This is usually sufficient.
+
+---
+
+# 2. Locator Wait
+
+Explicit waiting for element visibility:
+
+```python
+confirmation_text.wait_for(state="visible")
+```
+
+---
+
+# 3. Wait for Network Response
+
+You can wait for specific API responses.
+
+Example:
+
+```python
+page.wait_for_response("**/ajax")
+```
+
+---
+
+# 4. Wait for Selector
+
+Example:
+
+```python
+page.wait_for_selector("p.bg-success")
+```
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_ajax_data.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_ajax_data.py .                      [100%]
+
+1 passed
+```
+
+---
+
+# Why AJAX Handling is Important
+
+Most modern applications rely heavily on AJAX requests.
+
+Automation engineers must handle:
+
+- delayed elements
+- asynchronous API responses
+- dynamic UI updates
+- loading spinners
+
+Handling these correctly prevents **flaky automation tests**.
+
+---
+
+# Common Interview Question
+
+Automation interviews often ask:
+
+> How do you handle AJAX requests in Playwright?
+
+Good answers include:
+
+- Web-first assertions
+- Waiting for selectors
+- Waiting for network responses
+- Locator state checks
+
+---
+
+# Key Takeaways
+
+✔ AJAX loads data asynchronously without page refresh  
+✔ Tests must wait for dynamic content to appear  
+✔ Playwright provides automatic waiting mechanisms  
+✔ Web-first assertions help prevent flaky tests  
+✔ Proper waiting strategies are essential for reliable automation
+
+---
+---
+
+# UI Testing Playground – Sample App (Login Form Automation)
+
+The **Sample App** scenario in UI Testing Playground simulates a simple login workflow.  
+It is commonly used in automation testing interviews to verify that candidates can automate:
+
+- Form input fields
+- User authentication workflows
+- Button interactions
+- Dynamic text verification
+
+Website:
+
+```
+http://uitestingplayground.com/sampleapp
+```
+
+This scenario demonstrates how automation scripts interact with **username and password fields**, submit the form, and verify the login status message.
+
+---
+
+# Example Test: Automating Login and Verifying Success Message
+
+```python
+from playwright.sync_api import Page, expect
+
+
+def test_sample_app_login(page: Page):
+
+    # Navigate to UI Testing Playground
+    page.goto("http://uitestingplayground.com/")
+
+    # Open Sample App page
+    sample_app_link = page.get_by_role("link", name="Sample App")
+    sample_app_link.click()
+
+    # Locate username and password fields
+    username_input = page.get_by_placeholder("User Name")
+    password_input = page.get_by_placeholder("********")
+
+    username = "test"
+    password = "pwd"
+
+    username_input.fill(username)
+    password_input.fill(password)
+
+    # Click login button
+    login_button = page.get_by_role("button", name="Log In")
+    login_button.click()
+
+    # Locate login status message
+    login_status = page.locator("label#loginstatus")
+
+    # Verify successful login message
+    expect(login_status).to_have_text(f"Welcome, {username}!")
+```
+
+---
+
+# What This Test Demonstrates
+
+This test automates a **basic login workflow** and verifies that the application responds correctly.
+
+Steps performed:
+
+1. Open the UI Testing Playground homepage
+2. Navigate to the **Sample App** page
+3. Enter a username
+4. Enter a password
+5. Click the **Log In** button
+6. Verify the login confirmation message
+
+---
+
+# Locating Input Fields
+
+The test locates the username field using a **placeholder locator**.
+
+```python
+username_input = page.get_by_placeholder("User Name")
+```
+
+Example HTML:
+
+```
+<input placeholder="User Name">
+```
+
+The password field is located similarly.
+
+```python
+password_input = page.get_by_placeholder("********")
+```
+
+---
+
+# Filling Form Inputs
+
+Playwright allows filling text inputs using:
+
+```python
+input.fill(value)
+```
+
+Example:
+
+```python
+username_input.fill("test")
+password_input.fill("pwd")
+```
+
+This simulates user typing.
+
+---
+
+# Clicking the Login Button
+
+The login button is located using a **role locator**.
+
+```python
+login_button = page.get_by_role("button", name="Log In")
+```
+
+Role locators are recommended because they:
+
+✔ Follow accessibility standards  
+✔ Are more stable than CSS selectors  
+✔ Improve test readability  
+
+---
+
+# Verifying the Login Result
+
+After clicking the login button, the application displays a status message.
+
+Example HTML:
+
+```
+<label id="loginstatus">Welcome, test!</label>
+```
+
+The test verifies the text using:
+
+```python
+expect(login_status).to_have_text(f"Welcome, {username}!")
+```
+
+Playwright automatically waits until the expected text appears.
+
+---
+
+# Why This Scenario is Important
+
+This example demonstrates common automation tasks used in real applications:
+
+- Login workflows
+- Form validation
+- User input automation
+- UI text verification
+
+Automation engineers frequently automate similar flows in:
+
+- authentication systems
+- admin panels
+- web applications
+- user portals
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_sample_app.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_sample_app.py .                     [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices for Login Automation
+
+When automating login forms:
+
+✔ Use **placeholder or label locators** for inputs  
+✔ Verify **login success messages**  
+✔ Use **web-first assertions** to avoid flaky tests  
+✔ Keep test credentials in variables  
+
+---
+
+# Key Takeaways
+
+✔ The Sample App demonstrates login automation  
+✔ Playwright can interact with form inputs easily  
+✔ Web-first assertions verify dynamic UI messages  
+✔ This scenario is commonly used in automation interviews
+
+---
+---
+
+# UI Testing Playground – Handling Dynamic Class Attributes
+
+Modern web applications often generate **dynamic CSS classes**.  
+These classes may change between page loads, deployments, or UI states.
+
+Dynamic attributes make automation challenging because:
+
+- Selectors may break frequently
+- Class names may contain multiple values
+- The order of classes may change
+- Elements may share multiple class names
+
+The **UI Testing Playground Dynamic Class scenario** demonstrates this problem.
+
+Website:
+
+```
+http://uitestingplayground.com/classattr
+```
+
+This page contains a button whose **class attribute contains multiple dynamic values**.
+
+Automation engineers must use **robust locator strategies** to reliably identify the element.
+
+---
+
+# Example Test: Handling Dynamic Class Attributes
+
+```python
+from playwright.sync_api import Page, expect
+
+
+def test_dynamic_class_button_click(page: Page):
+
+    page.goto("http://uitestingplayground.com/classattr")
+
+    # Locate button using CSS class selector
+    button = page.locator("button.btn-primary")
+
+    # Alternative robust locator using XPath
+    button = page.locator("//button[contains(@class, 'btn-primary')]")
+
+    expect(button).to_be_visible()
+
+    button.click()
+```
+
+---
+
+# What This Test Demonstrates
+
+This test demonstrates how to **reliably locate elements with dynamic class attributes**.
+
+Steps performed:
+
+1. Navigate to the **Dynamic Class Attribute page**
+2. Locate the button using a class-based selector
+3. Verify the button is visible
+4. Click the button
+
+---
+
+# The Dynamic Class Problem
+
+Example HTML from the page:
+
+```
+<button class="btn btn-primary btn-lg">
+    Primary Button
+</button>
+```
+
+Possible variations:
+
+```
+btn btn-primary btn-lg
+btn btn-lg btn-primary
+btn-primary btn btn-lg
+```
+
+Because the class attribute contains **multiple values**, exact matching may fail.
+
+---
+
+# CSS Selector Strategy
+
+One approach is using a **CSS class selector**.
+
+```python
+button = page.locator("button.btn-primary")
+```
+
+This selects:
+
+```
+<button class="btn-primary">
+```
+
+or any element containing the class `btn-primary`.
+
+Advantages:
+
+✔ Simple  
+✔ Fast  
+✔ Readable  
+
+---
+
+# XPath Contains Strategy
+
+Another reliable approach uses **XPath contains()**.
+
+```python
+button = page.locator("//button[contains(@class, 'btn-primary')]")
+```
+
+This matches elements where the class attribute **contains the specified value**.
+
+Example:
+
+```
+class="btn btn-primary btn-lg"
+```
+
+---
+
+# Why Dynamic Attributes Are Important in Interviews
+
+Automation interviews often include questions like:
+
+> How do you handle dynamic attributes?
+
+Common strategies include:
+
+- Using **partial matches**
+- Using **contains() selectors**
+- Using **role-based locators**
+- Using **text-based locators**
+
+---
+
+# Alternative Playwright Locator Strategies
+
+Playwright provides multiple reliable locator strategies.
+
+---
+
+# Role Locator (Recommended)
+
+```python
+button = page.get_by_role("button", name="Primary Button")
+```
+
+Advantages:
+
+✔ Stable  
+✔ Accessible  
+✔ Recommended by Playwright  
+
+---
+
+# Text Locator
+
+```python
+button = page.get_by_text("Primary Button")
+```
+
+---
+
+# Data Attribute Locator
+
+Many production apps use testing attributes.
+
+Example:
+
+```
+<button data-testid="primary-btn">
+```
+
+Locator:
+
+```python
+page.get_by_test_id("primary-btn")
+```
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_dynamic_class.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_dynamic_class.py .                 [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices for Dynamic Attributes
+
+When dealing with dynamic selectors:
+
+✔ Avoid exact class matching  
+✔ Prefer **role-based locators**  
+✔ Use **contains() for partial matching**  
+✔ Use **stable attributes when available**
+
+---
+
+# Key Takeaways
+
+✔ Dynamic attributes are common in modern web apps  
+✔ Exact selectors can break automation tests  
+✔ Playwright provides multiple robust locator strategies  
+✔ Partial matching and role locators improve test stability  
+✔ Handling dynamic selectors is a common automation interview topic
+
+---
+---
+
+# UI Testing Playground – Handling Dynamic IDs
+
+Many modern web applications generate **dynamic IDs** for elements.  
+These IDs change every time the page loads or the application is deployed.
+
+Example:
+
+```
+id="button_12345"
+id="button_67890"
+id="button_98231"
+```
+
+This makes automation difficult because selectors based on **exact IDs will break**.
+
+The **UI Testing Playground Dynamic ID scenario** demonstrates this problem and is frequently used in **automation testing interviews**.
+
+Website:
+
+```
+http://uitestingplayground.com/dynamicid
+```
+
+Automation engineers must use **stable locator strategies** instead of relying on dynamic attributes.
+
+---
+
+# Example Test: Handling Dynamic IDs
+
+```python
+from playwright.sync_api import Page, expect
+
+def test_dynamic_id_button_click(page: Page):
+
+    page.goto("http://uitestingplayground.com/dynamicid")
+
+    dynamic_id_button = page.get_by_role(
+        "button",
+        name="Button with Dynamic ID"
+    )
+
+    expect(dynamic_id_button).to_be_visible()
+
+    dynamic_id_button.click()
+```
+
+---
+
+# What This Test Demonstrates
+
+This test shows how to **interact with elements that have dynamic IDs**.
+
+Steps performed:
+
+1. Open the **Dynamic ID page**
+2. Locate the button using a stable locator
+3. Verify the button is visible
+4. Click the button
+
+The test avoids using the element's ID because it **changes dynamically**.
+
+---
+
+# Example Dynamic HTML
+
+Example element from the page:
+
+```
+<button id="button_12345">
+    Button with Dynamic ID
+</button>
+```
+
+After reload:
+
+```
+<button id="button_98231">
+    Button with Dynamic ID
+</button>
+```
+
+Since the ID changes, a selector like:
+
+```
+#button_12345
+```
+
+would fail.
+
+---
+
+# Why Dynamic IDs Are Problematic
+
+Dynamic IDs cause common automation failures:
+
+```
+Element not found
+Locator failed
+Timeout exceeded
+```
+
+Automation engineers must use **stable attributes or text-based selectors** instead.
+
+---
+
+# Recommended Locator Strategy (Role Locator)
+
+The best approach is using **Playwright role locators**.
+
+```python
+page.get_by_role("button", name="Button with Dynamic ID")
+```
+
+Advantages:
+
+✔ Stable across page reloads  
+✔ Uses accessibility roles  
+✔ Easy to read and maintain  
+
+---
+
+# Alternative Locator Strategies
+
+Playwright provides multiple ways to handle dynamic attributes.
+
+---
+
+# Text Locator
+
+```python
+button = page.get_by_text("Button with Dynamic ID")
+```
+
+This locates elements based on visible text.
+
+---
+
+# Partial Attribute Matching
+
+If the ID has a stable prefix:
+
+Example:
+
+```
+id="button_12345"
+```
+
+You can use:
+
+```python
+page.locator("[id^='button_']")
+```
+
+This means:
+
+```
+ID starts with "button_"
+```
+
+---
+
+# XPath Contains Selector
+
+Another approach uses XPath.
+
+```python
+page.locator("//button[contains(@id,'button_')]")
+```
+
+---
+
+# Data Test Attributes (Best Practice in Real Projects)
+
+Production applications often include testing attributes.
+
+Example:
+
+```
+<button data-testid="dynamic-button">
+```
+
+Locator:
+
+```python
+page.get_by_test_id("dynamic-button")
+```
+
+This is the **most stable approach** in large automation frameworks.
+
+---
+
+# Running the Test
+
+Run the test using Pytest:
+
+```
+pytest test_dynamic_id.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_dynamic_id.py .                [100%]
+
+1 passed
+```
+
+---
+
+# Why Dynamic ID Handling Is Important
+
+Dynamic IDs are common in modern frameworks such as:
+
+- React
+- Angular
+- Vue
+- Next.js
+
+Automation engineers must design **robust locators** that remain stable even when attributes change.
+
+This skill is frequently tested in **Playwright and Selenium interviews**.
+
+---
+
+# Best Practices
+
+When dealing with dynamic attributes:
+
+✔ Avoid relying on IDs  
+✔ Prefer **role-based locators**  
+✔ Use **text-based selectors**  
+✔ Use **data-testid attributes when available**
+
+---
+
+# Key Takeaways
+
+✔ Dynamic IDs change between page loads  
+✔ ID-based selectors can break automation tests  
+✔ Role locators provide stable element identification  
+✔ Playwright offers multiple robust locator strategies  
+✔ Handling dynamic elements is a common automation interview scenario
+
+---
+---
+
+# UI Testing Playground – Dynamic Table Validation
+
+Dynamic tables are common in modern web applications such as:
+
+- dashboards
+- analytics tools
+- monitoring systems
+- admin panels
+
+Automation engineers must be able to **read data from tables, identify rows and columns dynamically, and validate values correctly**.
+
+The **UI Testing Playground Dynamic Table scenario** is designed to test this ability.
+
+Website:
+
+```
+http://uitestingplayground.com/dynamictable
+```
+
+The page contains a table with CPU usage for different browsers.  
+A label above the table displays the CPU value for **Chrome**, and the test must verify that this value matches the value inside the table.
+
+---
+
+# Example Test: Validating Dynamic Table Data
+
+```python
+from playwright.sync_api import Page
+import pytest
+
+
+def test_validate_dynamic_table_cpu_value(page: Page):
+
+    page.goto("http://uitestingplayground.com/")
+
+    dynamic_table_link = page.get_by_role("link", name="Dynamic Table")
+    dynamic_table_link.click()
+
+    label = page.locator("p.bg-warning").inner_text()
+
+    percentage = label.split()[-1]
+
+    column_headers = page.get_by_role("columnheader")
+
+    cpu_column = None
+
+    for index in range(column_headers.count()):
+        column_header = column_headers.nth(index)
+
+        if column_header.inner_text() == "CPU":
+            cpu_column = index
+            break
+
+    assert cpu_column is not None
+
+    chrome_row = page.get_by_role("row").filter(has_text="Chrome")
+
+    chrome_cpu = chrome_row.get_by_role("cell").nth(cpu_column)
+
+    assert percentage == chrome_cpu.inner_text()
+```
+
+---
+
+# What This Test Demonstrates
+
+This test verifies that the **CPU usage value displayed in the label matches the value inside the table for Chrome**.
+
+Steps performed:
+
+1. Navigate to UI Testing Playground
+2. Open the **Dynamic Table** page
+3. Extract CPU value from the label
+4. Identify the **CPU column dynamically**
+5. Locate the **Chrome row**
+6. Extract CPU value from the table
+7. Compare both values
+
+---
+
+# Understanding the Dynamic Table
+
+Example UI:
+
+```
+Chrome CPU: 27%
+```
+
+Table:
+
+| Browser | CPU | Memory |
+|--------|----|----|
+| Chrome | 27% | 90MB |
+| Firefox | 12% | 70MB |
+| Edge | 15% | 65MB |
+
+The goal is to verify that:
+
+```
+Label CPU value == Chrome row CPU value
+```
+
+---
+
+# Extracting the Label Value
+
+The label containing the CPU percentage is located using:
+
+```python
+label = page.locator("p.bg-warning").inner_text()
+```
+
+Example text:
+
+```
+Chrome CPU: 27%
+```
+
+To extract the percentage:
+
+```python
+percentage = label.split()[-1]
+```
+
+This retrieves:
+
+```
+27%
+```
+
+---
+
+# Finding the CPU Column Dynamically
+
+Instead of hardcoding the column index, the test identifies the **CPU column dynamically**.
+
+```python
+column_headers = page.get_by_role("columnheader")
+```
+
+Loop through headers:
+
+```python
+for index in range(column_headers.count()):
+```
+
+Check the header text:
+
+```python
+if column_header.inner_text() == "CPU":
+```
+
+Once found:
+
+```
+cpu_column = index
+```
+
+This makes the test **resilient to column order changes**.
+
+---
+
+# Locating the Chrome Row
+
+The Chrome row is located using text filtering.
+
+```python
+chrome_row = page.get_by_role("row").filter(has_text="Chrome")
+```
+
+This selects the row that contains the word **Chrome**.
+
+---
+
+# Extracting the CPU Value from the Table
+
+Once the row is located, the CPU column value is extracted.
+
+```python
+chrome_cpu = chrome_row.get_by_role("cell").nth(cpu_column)
+```
+
+Example result:
+
+```
+27%
+```
+
+---
+
+# Validating the Data
+
+The test compares the label value with the table value.
+
+```python
+assert percentage == chrome_cpu.inner_text()
+```
+
+If both values match, the test passes.
+
+---
+
+# Why This Scenario is Important
+
+Dynamic table handling is a **common real-world automation task**.
+
+Automation engineers frequently need to:
+
+- extract table data
+- validate dynamic values
+- compare UI elements
+- verify dashboard metrics
+
+This scenario tests **logical automation skills**, not just simple element interaction.
+
+---
+
+# Common Interview Question
+
+Automation interviews often ask:
+
+> How do you validate data in dynamic tables?
+
+Good approaches include:
+
+- locating headers dynamically
+- identifying rows using text filters
+- extracting column values programmatically
+- comparing UI values
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_dynamic_table.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_dynamic_table.py .           [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices for Table Automation
+
+When working with dynamic tables:
+
+✔ Identify columns dynamically  
+✔ Avoid hardcoding column indexes  
+✔ Use text filters to locate rows  
+✔ Extract table data programmatically  
+
+---
+
+# Key Takeaways
+
+✔ Dynamic tables require programmatic data extraction  
+✔ Column indexes should be determined dynamically  
+✔ Row filtering simplifies table navigation  
+✔ Automation tests can validate UI data against labels or other UI elements  
+
+---
+---
+
+# UI Testing Playground – Hidden Layers (Click Interception)
+
+Modern web applications often contain **overlapping elements or hidden layers** that block user interactions.
+
+These layers may appear due to:
+
+- modal dialogs
+- floating headers
+- animations
+- dynamic overlays
+- CSS positioning
+
+In automation testing, this often leads to errors such as:
+
+```
+Element is not clickable
+Element is obscured
+Timeout exceeded
+```
+
+The **UI Testing Playground Hidden Layers scenario** demonstrates this problem.
+
+Website:
+
+```
+http://uitestingplayground.com/hiddenlayers
+```
+
+This page contains a **green button** that becomes hidden after the first click because another layer covers it.
+
+Automation engineers must detect and handle this situation correctly.
+
+---
+
+# Example Test: Handling Hidden Layers
+
+```python
+from playwright.sync_api import Page, TimeoutError
+import pytest
+
+
+def test_hidden_layers_click_behavior(page: Page):
+
+    page.goto("http://uitestingplayground.com/hiddenlayers")
+
+    green_btn = page.locator("button#greenButton")
+
+    # First click works
+    green_btn.click()
+
+    # Second click should fail because the button becomes hidden
+    with pytest.raises(TimeoutError):
+        green_btn.click(timeout=2000)
+```
+
+---
+
+# What This Test Demonstrates
+
+This test verifies that the **green button becomes hidden after the first click**.
+
+Steps performed:
+
+1. Navigate to the Hidden Layers page
+2. Locate the green button
+3. Click the button successfully
+4. Attempt to click the button again
+5. Verify that the second click fails
+
+---
+
+# Understanding the Hidden Layer Behavior
+
+Initial UI:
+
+```
+[ Green Button ]
+```
+
+After clicking:
+
+```
+[ Invisible Overlay ]
+[ Green Button (hidden underneath) ]
+```
+
+The overlay **intercepts the click**, preventing the button from being clicked again.
+
+---
+
+# Why the Second Click Fails
+
+Playwright waits for an element to be:
+
+- visible
+- stable
+- not covered by another element
+
+When the button becomes hidden behind another layer, Playwright throws a **TimeoutError**.
+
+Example error:
+
+```
+TimeoutError: Element is not visible or is covered by another element
+```
+
+---
+
+# Handling the Expected Failure
+
+The test intentionally verifies that the second click fails.
+
+```python
+with pytest.raises(TimeoutError):
+```
+
+This tells Pytest:
+
+```
+Expect a TimeoutError
+```
+
+If the error occurs, the test **passes**.
+
+If no error occurs, the test **fails**.
+
+---
+
+# Why This Scenario Is Important
+
+Hidden layers are common in modern UI frameworks such as:
+
+- React
+- Angular
+- Vue
+- Bootstrap
+
+Automation engineers frequently encounter issues like:
+
+- click interception
+- invisible overlays
+- animation layers
+- hidden elements
+
+Handling these scenarios correctly is a **key automation testing skill**.
+
+---
+
+# Strategies to Handle Hidden Elements
+
+Automation engineers often resolve hidden element issues using:
+
+---
+
+# 1. Wait for Element to Become Visible
+
+```python
+locator.wait_for(state="visible")
+```
+
+---
+
+# 2. Scroll Element into View
+
+```python
+locator.scroll_into_view_if_needed()
+```
+
+---
+
+# 3. Use Force Click (Not Recommended)
+
+```python
+locator.click(force=True)
+```
+
+This bypasses Playwright's safety checks.
+
+---
+
+# 4. Remove Blocking Layer
+
+Sometimes the overlay must be closed first.
+
+Example:
+
+```
+Close modal dialog
+Then click target element
+```
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```
+pytest test_hidden_layers.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_hidden_layers.py .           [100%]
+
+1 passed
+```
+
+---
+
+# Why Hidden Layers Are an Interview Topic
+
+Automation interview questions often include:
+
+> Why does Playwright fail to click an element even though it exists?
+
+The correct explanation usually involves:
+
+- overlapping elements
+- hidden layers
+- click interception
+- visibility issues
+
+Understanding this concept demonstrates **advanced debugging skills**.
+
+---
+
+# Key Takeaways
+
+✔ Hidden layers can block user interactions  
+✔ Playwright prevents clicking covered elements  
+✔ Timeout errors may indicate click interception  
+✔ Pytest can validate expected failures using `pytest.raises()`  
+✔ Handling overlays is a common automation testing challenge
+
+---
+---
+
+# UI Testing Playground – Load Delay (Handling Delayed Elements)
+
+Many modern web applications load elements **after a delay** due to:
+
+- server processing
+- API calls
+- JavaScript rendering
+- lazy loading
+- client-side frameworks (React, Angular, Vue)
+
+If automation scripts attempt to interact with elements **before they appear**, tests may fail with errors such as:
+
+```
+Element not found
+Element not visible
+Timeout exceeded
+```
+
+The **UI Testing Playground Load Delay scenario** simulates this behavior by displaying a button **after a few seconds delay**.
+
+Website:
+
+```
+http://uitestingplayground.com/loaddelay
+```
+
+Automation engineers must implement proper **waiting strategies** to handle delayed elements reliably.
+
+---
+
+# Example Test: Handling Delayed Button Appearance
+
+```python
+from playwright.sync_api import Page, expect
+
+
+def test_load_delay_button(page: Page):
+
+    page.goto("http://uitestingplayground.com/")
+
+    load_delay_link = page.get_by_role("link", name="Load Delay")
+    load_delay_link.click()
+
+    button_after_delay = page.get_by_role(
+        "button",
+        name="Button Appearing After Delay"
+    )
+
+    button_after_delay.wait_for(state="visible")
+
+    expect(button_after_delay).to_be_visible()
+
+    button_after_delay.click()
+```
+
+---
+
+# What This Test Demonstrates
+
+This test verifies that automation can correctly interact with elements that **appear after a delay**.
+
+Steps performed:
+
+1. Open UI Testing Playground
+2. Navigate to the **Load Delay page**
+3. Wait for the delayed button to appear
+4. Verify the button is visible
+5. Click the button
+
+---
+
+# Understanding the Load Delay Behavior
+
+When the page loads:
+
+```
+Page loads
+↓
+No button visible
+↓
+Delay (approx. 3 seconds)
+↓
+Button appears
+```
+
+Automation scripts must **wait until the button becomes visible**.
+
+---
+
+# Waiting for Delayed Elements
+
+The test uses:
+
+```python
+button_after_delay.wait_for(state="visible")
+```
+
+This ensures Playwright waits until the button appears.
+
+Available states:
+
+| State | Description |
+|------|-------------|
+| visible | Element appears on the page |
+| hidden | Element becomes hidden |
+| attached | Element added to DOM |
+| detached | Element removed from DOM |
+
+---
+
+# Web-First Assertion
+
+Playwright also provides web-first assertions that automatically wait.
+
+```python
+expect(button_after_delay).to_be_visible()
+```
+
+This assertion:
+
+```
+Locate element
+↓
+Wait until visible
+↓
+Pass if visible
+↓
+Fail after timeout
+```
+
+---
+
+# Alternative Waiting Strategies
+
+Playwright supports several synchronization techniques.
+
+---
+
+# 1. Web-First Assertions (Recommended)
+
+```python
+expect(locator).to_be_visible()
+```
+
+Automatically waits.
+
+---
+
+# 2. Explicit Locator Wait
+
+```python
+locator.wait_for(state="visible")
+```
+
+---
+
+# 3. Wait for Selector
+
+```python
+page.wait_for_selector("button")
+```
+
+---
+
+# 4. Wait for Network Response
+
+```python
+page.wait_for_response("**/api")
+```
+
+Useful for API-driven UI updates.
+
+---
+
+# Why Delayed Elements Are Important
+
+Handling delayed elements is essential in automation testing because modern applications often rely on:
+
+- asynchronous APIs
+- dynamic UI rendering
+- loading animations
+- background data fetching
+
+Without proper waiting strategies, tests become **flaky and unreliable**.
+
+---
+
+# Common Interview Question
+
+Automation interviews often ask:
+
+> How do you handle elements that appear after a delay?
+
+Good answers include:
+
+- web-first assertions
+- locator waiting
+- waiting for selectors
+- waiting for network responses
+
+---
+
+# Running the Test
+
+Run the test using Pytest:
+
+```bash
+pytest test_load_delay.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_load_delay.py .                [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices for Delayed Elements
+
+When working with delayed UI elements:
+
+✔ Use **web-first assertions**  
+✔ Avoid fixed sleep delays  
+✔ Prefer locator-based waiting  
+✔ Ensure elements are visible before interacting  
+
+---
+
+# Key Takeaways
+
+✔ Many web applications load elements asynchronously  
+✔ Tests must wait for delayed UI components  
+✔ Playwright provides powerful waiting mechanisms  
+✔ Web-first assertions help prevent flaky tests  
+✔ Handling delayed elements is a common automation interview topic
+
+---
+---
+
+# UI Testing Playground – Mouse Over (Hover & Double Click Actions)
+
+Modern web applications often use **mouse hover interactions** to reveal hidden elements such as:
+
+- dropdown menus
+- tooltips
+- navigation links
+- contextual actions
+
+Automation engineers must be able to simulate these user interactions.
+
+The **UI Testing Playground Mouse Over scenario** demonstrates how hover actions can trigger UI changes.
+
+Website:
+
+```
+http://uitestingplayground.com/mouseover
+```
+
+This page contains an element that reveals an **active link** when hovered, and clicking the link increases a click counter.
+
+---
+
+# Example Test: Hover and Double Click Interaction
+
+```python
+from playwright.sync_api import Page, expect
+
+
+def test_mouse_over_interaction(page: Page):
+
+    page.goto("http://uitestingplayground.com/")
+
+    # Navigate to the Mouse Over page
+    mouse_over_link = page.get_by_role("link", name="Mouse Over")
+    mouse_over_link.click()
+
+    # Hover over the "Click me" element
+    click_me_button = page.get_by_title("Click me")
+    click_me_button.hover()
+
+    # Locate the active link revealed after hover
+    active_link = page.get_by_title("Active Link")
+
+    # Double-click the active link
+    active_link.click(click_count=2)
+
+    # Verify click counter
+    click_counter = page.locator("span#clickCount")
+
+    expect(click_counter).to_have_text("2")
+```
+
+---
+
+# What This Test Demonstrates
+
+This test verifies that hover interactions trigger UI behavior and that multiple clicks are correctly counted.
+
+Steps performed:
+
+1. Open the **UI Testing Playground homepage**
+2. Navigate to the **Mouse Over page**
+3. Hover over the "Click me" element
+4. Reveal the **Active Link**
+5. Double-click the active link
+6. Verify that the click counter increases
+
+---
+
+# Hover Interaction
+
+The hover action simulates a user moving the mouse over an element.
+
+```python
+click_me_button.hover()
+```
+
+Hover actions are useful when elements only appear after mouse interaction.
+
+Examples include:
+
+- dropdown menus
+- tooltip elements
+- navigation flyouts
+
+---
+
+# Double Click Action
+
+Playwright allows multiple clicks using the `click_count` parameter.
+
+```python
+active_link.click(click_count=2)
+```
+
+This simulates a **double-click**.
+
+Equivalent actions:
+
+| Action | Example |
+|------|------|
+| Single click | `locator.click()` |
+| Double click | `locator.click(click_count=2)` |
+| Triple click | `locator.click(click_count=3)` |
+
+---
+
+# Verifying Click Count
+
+The page contains a counter that increments when the active link is clicked.
+
+Locator:
+
+```python
+click_counter = page.locator("span#clickCount")
+```
+
+Example HTML:
+
+```
+<span id="clickCount">2</span>
+```
+
+Assertion:
+
+```python
+expect(click_counter).to_have_text("2")
+```
+
+This verifies the link was clicked twice.
+
+---
+
+# Why Hover Testing Is Important
+
+Hover interactions are commonly used in:
+
+- navigation menus
+- dropdown components
+- tooltips
+- interactive dashboards
+
+Automation engineers must verify these behaviors to ensure UI functionality works correctly.
+
+---
+
+# Alternative Mouse Actions in Playwright
+
+Playwright supports many mouse interactions.
+
+---
+
+# Right Click
+
+```python
+locator.click(button="right")
+```
+
+---
+
+# Double Click
+
+```python
+locator.dblclick()
+```
+
+---
+
+# Drag and Drop
+
+```python
+source.drag_to(target)
+```
+
+---
+
+# Manual Mouse Movement
+
+```python
+page.mouse.move(300, 400)
+```
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```
+pytest test_mouse_over.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_mouse_over.py .                 [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices for Hover Testing
+
+When testing hover interactions:
+
+✔ Use `hover()` to simulate user behavior  
+✔ Verify UI elements appear after hover  
+✔ Combine hover with click assertions  
+✔ Use web-first assertions for reliability  
+
+---
+
+# Key Takeaways
+
+✔ Hover interactions reveal hidden UI elements  
+✔ Playwright supports hover using `locator.hover()`  
+✔ Multi-click actions can be simulated with `click_count`  
+✔ Hover testing is important for menus, tooltips, and dynamic UI components
+
+---
+---
+
+# UI Testing Playground – Non-Breaking Space (Handling Special Characters in Locators)
+
+Web applications sometimes contain **special whitespace characters** that look like normal spaces but are technically different.
+
+One of the most common examples is the **Non-Breaking Space**.
+
+Character:
+
+```
+\u00A0
+```
+
+This character prevents line breaks between words and is often used in HTML for formatting.
+
+Example:
+
+```
+My Button
+```
+
+Although it visually appears as:
+
+```
+My Button
+```
+
+The two strings are **not identical**, which can cause automation locators to fail.
+
+The **UI Testing Playground Non-Breaking Space scenario** demonstrates this issue.
+
+Website:
+
+```
+http://uitestingplayground.com/nbsp
+```
+
+Automation engineers must understand how to correctly locate elements that contain special characters.
+
+---
+
+# Example Test: Handling Non-Breaking Space in Button Text
+
+```python
+from playwright.sync_api import Page
+
+
+def test_non_breaking_space_button(page: Page):
+
+    page.goto("http://uitestingplayground.com/")
+
+    # Navigate to Non-Breaking Space example
+    nbsp_link = page.get_by_role("link", name="Non-Breaking Space")
+    nbsp_link.click()
+
+    # Locate button using the Unicode non-breaking space
+    page.locator("//button[text()='My\u00a0Button']").click(timeout=2000)
+```
+
+---
+
+# What This Test Demonstrates
+
+This test demonstrates how to locate elements whose text contains **special whitespace characters**.
+
+Steps performed:
+
+1. Navigate to UI Testing Playground
+2. Open the **Non-Breaking Space example**
+3. Locate the button containing the special whitespace character
+4. Click the button successfully
+
+---
+
+# Understanding the Non-Breaking Space Problem
+
+The button text appears as:
+
+```
+My Button
+```
+
+But the actual HTML contains:
+
+```
+My&nbsp;Button
+```
+
+Which translates to:
+
+```
+My\u00A0Button
+```
+
+Because of this, a locator like:
+
+```
+My Button
+```
+
+will **fail to match the element**.
+
+---
+
+# Correct Locator Using Unicode
+
+To match the element correctly, the locator must include the Unicode character:
+
+```python
+page.locator("//button[text()='My\u00a0Button']")
+```
+
+Here:
+
+```
+\u00a0
+```
+
+represents the **non-breaking space character**.
+
+---
+
+# Why This Scenario Is Important
+
+Automation engineers frequently encounter problems when:
+
+- UI text contains hidden characters
+- text includes non-breaking spaces
+- text includes special Unicode symbols
+- formatting changes unexpectedly
+
+Without understanding these characters, locators may fail even though the element appears correct visually.
+
+---
+
+# Alternative Locator Strategies
+
+Playwright provides several ways to handle special characters.
+
+---
+
+# 1. Using `contains()` XPath
+
+```python
+page.locator("//button[contains(text(),'My')]")
+```
+
+This ignores exact spacing.
+
+---
+
+# 2. Using Playwright Text Locator
+
+```python
+page.get_by_text("My Button")
+```
+
+Playwright's text engine often normalizes whitespace.
+
+---
+
+# 3. Using Role Locator (Recommended)
+
+```python
+page.get_by_role("button", name="My Button")
+```
+
+Role locators are usually **more stable than XPath**.
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_non_breaking_space.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_non_breaking_space.py .         [100%]
+
+1 passed
+```
+
+---
+
+# Why This Scenario Appears in Interviews
+
+Automation interviews sometimes include questions like:
+
+> Why does a locator fail even though the text appears correct?
+
+The answer may involve:
+
+- non-breaking spaces
+- hidden Unicode characters
+- whitespace normalization
+- HTML entities
+
+Understanding these issues demonstrates **strong debugging skills in automation testing**.
+
+---
+
+# Key Takeaways
+
+✔ Non-breaking spaces look like normal spaces but are different characters  
+✔ They are represented by `\u00A0` in Unicode  
+✔ Locators must sometimes include special characters to match elements  
+✔ Role-based locators help avoid whitespace issues  
+✔ Handling special characters is an important automation debugging skill
+
+---
+---
+
+# UI Testing Playground – Progress Bar (Handling Dynamic UI Updates)
+
+Many web applications use **progress indicators** to show the status of long-running operations such as:
+
+- file uploads
+- data processing
+- API requests
+- background tasks
+- loading screens
+
+Automation tests must correctly **monitor dynamic UI updates** and trigger actions at the right time.
+
+The **UI Testing Playground Progress Bar scenario** demonstrates how automation can interact with a progress bar that updates continuously.
+
+Website:
+
+```
+http://uitestingplayground.com/progressbar
+```
+
+In this scenario, the test must:
+
+- start the progress bar
+- monitor its value
+- stop it when it reaches **75%**
+
+---
+
+# Example Test: Monitoring and Stopping Progress Bar
+
+```python
+from playwright.sync_api import Page
+
+
+def test_stop_progress_bar_at_target(page: Page):
+
+    page.goto("http://uitestingplayground.com/")
+
+    progress_bar_link = page.get_by_role("link", name="Progress Bar")
+    progress_bar_link.click()
+
+    start_button = page.get_by_role("button", name="Start")
+    stop_button = page.get_by_role("button", name="Stop")
+
+    progress_bar = page.get_by_role("progressbar")
+
+    start_button.click()
+
+    # Poll the progress bar value
+    while int(progress_bar.inner_text().replace("%", "")) < 75:
+        pass
+
+    stop_button.click()
+
+    print(f"Progress bar stopped at {progress_bar.inner_text()}")
+```
+
+---
+
+# What This Test Demonstrates
+
+This test automates the process of **monitoring a progress bar and stopping it when a threshold is reached**.
+
+Steps performed:
+
+1. Navigate to UI Testing Playground
+2. Open the **Progress Bar page**
+3. Start the progress bar
+4. Continuously monitor the progress value
+5. Stop the progress when it reaches **75%**
+6. Print the final progress value
+
+---
+
+# Understanding the Progress Bar
+
+The progress bar displays values such as:
+
+```
+0%
+15%
+42%
+67%
+75%
+90%
+100%
+```
+
+The automation script must detect when the value reaches **75%** and immediately stop it.
+
+---
+
+# Extracting the Progress Value
+
+The progress bar text looks like:
+
+```
+75%
+```
+
+To convert it into a number:
+
+```python
+progress_bar.inner_text().replace("%", "")
+```
+
+Example result:
+
+```
+"75"
+```
+
+Convert to integer:
+
+```python
+int("75")
+```
+
+Result:
+
+```
+75
+```
+
+---
+
+# Polling the Progress Value
+
+The test continuously checks the progress bar value.
+
+```python
+while int(progress_bar.inner_text().replace("%", "")) < 75:
+    pass
+```
+
+This loop runs until the progress reaches the target threshold.
+
+This technique is called **polling**.
+
+---
+
+# Why This Scenario Is Important
+
+Automation engineers frequently encounter dynamic UI updates such as:
+
+- loading indicators
+- upload progress bars
+- streaming data updates
+- task completion indicators
+
+Tests must be able to **observe UI changes and react accordingly**.
+
+---
+
+# Better Approach (Recommended in Production)
+
+Busy loops like:
+
+```python
+while condition:
+    pass
+```
+
+can consume CPU unnecessarily.
+
+A better approach is using **Playwright waiting mechanisms**.
+
+Example:
+
+```python
+page.wait_for_function(
+    "() => parseInt(document.querySelector('[role=progressbar]').innerText) >= 75"
+)
+```
+
+This waits efficiently until the condition becomes true.
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_progress_bar.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_progress_bar.py .             [100%]
+
+Progress bar stopped at 75%
+```
+
+---
+
+# Why This Scenario Appears in Interviews
+
+Automation interviews often ask:
+
+> How would you handle a progress bar or dynamic UI value?
+
+Expected answers include:
+
+- polling the UI value
+- waiting for a condition
+- monitoring element text
+- using Playwright wait functions
+
+This scenario demonstrates **logical automation thinking**, not just simple element interaction.
+
+---
+
+# Best Practices for Dynamic UI Monitoring
+
+When testing progress indicators:
+
+✔ Avoid fixed delays like `sleep()`  
+✔ Monitor UI values dynamically  
+✔ Use Playwright wait functions when possible  
+✔ Stop actions at defined thresholds  
+
+---
+
+# Key Takeaways
+
+✔ Progress bars represent dynamic UI updates  
+✔ Automation must monitor UI values continuously  
+✔ Polling techniques can detect threshold values  
+✔ Playwright wait functions provide efficient synchronization  
+✔ Handling dynamic UI changes is a common automation interview topic
+
+---
+---
+
+# UI Testing Playground – Scrollbars (Handling Elements Outside the Viewport)
+
+In many web applications, some elements are **not immediately visible** because they are located outside the current viewport. These elements may require scrolling before they can be interacted with.
+
+Common examples include:
+
+- long pages
+- hidden buttons
+- elements inside scrollable containers
+- lazy-loaded components
+
+Automation tests must ensure that elements are **scrolled into view before interacting with them**.
+
+The **UI Testing Playground Scrollbars scenario** demonstrates this behavior.
+
+Website:
+
+```
+http://uitestingplayground.com/scrollbars
+```
+
+In this scenario, the **Hiding Button** is positioned outside the visible area and can only be accessed after scrolling.
+
+---
+
+# Example Test: Scrolling to Hidden Elements
+
+```python
+from playwright.sync_api import Page
+
+
+def test_scroll_to_hidden_button(page: Page):
+
+    page.goto("http://uitestingplayground.com/")
+
+    # Navigate to the Scrollbars example
+    scrollbars_link = page.get_by_role("link", name="Scrollbars")
+    scrollbars_link.click()
+
+    # Locate the hidden button
+    hiding_button = page.get_by_role("button", name="Hiding Button")
+
+    # Scroll the button into view
+    hiding_button.scroll_into_view_if_needed()
+
+    # Capture screenshot for verification
+    page.screenshot(path="test-scrollbars.jpg")
+```
+
+---
+
+# What This Test Demonstrates
+
+This test verifies that automation can **locate and scroll to elements outside the visible area**.
+
+Steps performed:
+
+1. Open the **UI Testing Playground homepage**
+2. Navigate to the **Scrollbars page**
+3. Locate the hidden button
+4. Scroll the page until the button becomes visible
+5. Capture a screenshot of the page
+
+---
+
+# Why Elements Outside the Viewport Are a Problem
+
+Automation scripts often fail when attempting to interact with elements that are not visible.
+
+Typical errors include:
+
+```
+Element not visible
+Element not clickable
+Element outside viewport
+```
+
+Before interacting with such elements, automation frameworks must **scroll the element into view**.
+
+---
+
+# Scrolling an Element into View
+
+Playwright provides a built-in method:
+
+```python
+locator.scroll_into_view_if_needed()
+```
+
+This method automatically scrolls the page until the element becomes visible.
+
+Advantages:
+
+✔ Automatically handles scrolling  
+✔ Works for nested scroll containers  
+✔ Prevents interaction failures  
+
+---
+
+# Taking Screenshots
+
+The test captures a screenshot after scrolling.
+
+```python
+page.screenshot(path="test-scrollbars.jpg")
+```
+
+Screenshots are useful for:
+
+- debugging automation
+- visual validation
+- test reporting
+- CI/CD pipelines
+
+Example output file:
+
+```
+test-scrollbars.jpg
+```
+
+---
+
+# Alternative Scrolling Techniques
+
+Playwright also supports other scrolling methods.
+
+---
+
+# Scroll Using JavaScript
+
+```python
+page.evaluate("window.scrollBy(0, 500)")
+```
+
+---
+
+# Scroll Using Mouse Wheel
+
+```python
+page.mouse.wheel(0, 500)
+```
+
+---
+
+# Scroll Page to Bottom
+
+```python
+page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+```
+
+---
+
+# Running the Test
+
+Run the test using Pytest:
+
+```bash
+pytest test_scrollbars.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_scrollbars.py .                 [100%]
+
+1 passed
+```
+
+---
+
+# Why This Scenario Is Important
+
+Handling elements outside the viewport is essential in automation testing because modern applications often contain:
+
+- long scrolling pages
+- hidden UI elements
+- nested scroll containers
+- dynamic content loading
+
+Automation engineers must ensure that elements are **visible and accessible before interacting with them**.
+
+---
+
+# Best Practices for Scroll Automation
+
+When working with scrollable pages:
+
+✔ Use `scroll_into_view_if_needed()` before clicking  
+✔ Avoid manual scrolling when possible  
+✔ Capture screenshots for debugging  
+✔ Ensure elements are visible before interacting  
+
+---
+
+# Key Takeaways
+
+✔ Some UI elements are hidden outside the viewport  
+✔ Automation scripts must scroll before interacting  
+✔ Playwright provides `scroll_into_view_if_needed()` for this purpose  
+✔ Screenshots help verify UI state and debug issues  
+
+---
+---
+
+# UI Testing Playground – Text Input (Dynamic UI Update)
+
+Modern web applications often change UI elements dynamically based on user input.
+
+Examples include:
+
+- dynamic button labels
+- search results
+- form validation messages
+- live UI updates
+
+Automation tests must verify that **user input correctly triggers UI updates**.
+
+The **UI Testing Playground Text Input scenario** demonstrates this behavior.
+
+Website:
+
+```
+http://uitestingplayground.com/textinput
+```
+
+In this example, typing text into an input field changes the **label of a button**.
+
+---
+
+# Example Test: Verifying Dynamic Button Text
+
+```python
+from playwright.sync_api import Page, expect
+
+
+def test_text_input_updates_button_label(page: Page):
+
+    page.goto("http://uitestingplayground.com/")
+
+    # Navigate to Text Input page
+    text_input_link = page.get_by_role("link", name="Text Input")
+    text_input_link.click()
+
+    # Locate input field
+    input_field = page.get_by_label("Set New Button Name")
+
+    query = "Awesome"
+
+    # Enter text into input
+    input_field.fill(query)
+
+    # Locate button whose label changes
+    dynamic_button = page.locator("button.btn-primary")
+
+    # Click the button
+    dynamic_button.click()
+
+    # Verify button text changed
+    expect(dynamic_button).to_have_text(query)
+```
+
+---
+
+# What This Test Demonstrates
+
+This test verifies that **user input correctly updates the button label**.
+
+Steps performed:
+
+1. Open the **UI Testing Playground homepage**
+2. Navigate to the **Text Input page**
+3. Enter text into the input field
+4. Click the button
+5. Verify that the button label updates with the entered text
+
+---
+
+# Understanding the Dynamic Behavior
+
+Initial UI:
+
+```
+[Button That Should Change]
+```
+
+User input:
+
+```
+Awesome
+```
+
+After clicking the button:
+
+```
+[Awesome]
+```
+
+The button text dynamically changes based on the user input.
+
+---
+
+# Locating the Input Field
+
+The input field is located using a **label locator**.
+
+```python
+input_field = page.get_by_label("Set New Button Name")
+```
+
+Example HTML:
+
+```
+<label>Set New Button Name</label>
+<input type="text">
+```
+
+Using label locators improves:
+
+✔ accessibility  
+✔ test readability  
+✔ locator stability  
+
+---
+
+# Filling Text in the Input Field
+
+Playwright allows entering text using:
+
+```python
+input_field.fill("Awesome")
+```
+
+This simulates a user typing.
+
+---
+
+# Clicking the Dynamic Button
+
+The button is located using a CSS locator.
+
+```python
+dynamic_button = page.locator("button.btn-primary")
+```
+
+The button text updates after clicking it.
+
+---
+
+# Verifying the Button Text
+
+The test verifies the new button label.
+
+```python
+expect(dynamic_button).to_have_text(query)
+```
+
+Playwright automatically waits until the expected text appears.
+
+---
+
+# Why This Scenario Is Important
+
+Dynamic UI updates are common in modern applications such as:
+
+- React
+- Angular
+- Vue
+- Next.js
+
+Automation tests must confirm that **user interactions trigger the correct UI behavior**.
+
+---
+
+# Running the Test
+
+Run the test using Pytest:
+
+```bash
+pytest test_text_input.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_text_input.py .                [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices for Dynamic UI Testing
+
+When testing dynamic UI updates:
+
+✔ verify UI changes after user input  
+✔ use web-first assertions for reliability  
+✔ avoid fixed delays  
+✔ validate visible text changes  
+
+---
+
+# Key Takeaways
+
+✔ User input can dynamically change UI elements  
+✔ Automation tests must verify UI updates after interactions  
+✔ Playwright provides reliable text assertions  
+✔ Dynamic UI validation is a common automation interview topic  
+
+---
+---
+
+# UI Testing Playground – Click (Handling Real User Click Events)
+
+In web automation testing, there is an important distinction between:
+
+- **DOM click events**
+- **real user interactions**
+
+Some web applications are designed to **ignore synthetic DOM click events** and only respond to **real user actions**.
+
+This can cause automation scripts to fail when using tools that trigger only DOM-level events.
+
+The **UI Testing Playground Click scenario** demonstrates this behavior.
+
+Website:
+
+```
+http://uitestingplayground.com/click
+```
+
+In this example, clicking the primary button triggers a UI update only when the click is recognized as a **real user interaction**.
+
+---
+
+# Example Test: Triggering Real Click Events
+
+```python
+from playwright.sync_api import Page, expect
+
+
+def test_click_triggers_ui_change(page: Page):
+
+    page.goto("http://uitestingplayground.com/")
+
+    # Navigate to Click example
+    click_example_link = page.get_by_role("link", name="Click")
+    click_example_link.click()
+
+    # Locate button that ignores DOM click
+    primary_button = page.locator("button.btn-primary")
+
+    # Click the button
+    primary_button.click()
+
+    # Verify new button appears
+    success_button = page.locator("button.btn-success")
+
+    expect(success_button).to_be_visible()
+```
+
+---
+
+# What This Test Demonstrates
+
+This test verifies that clicking the primary button **triggers a UI update**.
+
+Steps performed:
+
+1. Open the **UI Testing Playground homepage**
+2. Navigate to the **Click example**
+3. Click the primary button
+4. Verify that a new success button appears
+
+---
+
+# Understanding the Click Behavior
+
+Initial UI:
+
+```
+[Button That Ignores DOM Click Event]
+```
+
+After clicking:
+
+```
+[Button That Ignores DOM Click Event]
+[Success Button Appears]
+```
+
+The appearance of the **success button** confirms that the click interaction worked correctly.
+
+---
+
+# Why DOM Click vs User Click Matters
+
+Some automation frameworks trigger only **DOM click events**.
+
+Example JavaScript:
+
+```
+element.click()
+```
+
+However, modern web applications sometimes require **actual user interaction events**, such as:
+
+- mouse down
+- mouse up
+- pointer events
+- focus events
+
+Playwright simulates **real user interactions**, which helps avoid these issues.
+
+---
+
+# Playwright Click Advantages
+
+Playwright's click behavior includes:
+
+✔ scrolling element into view  
+✔ waiting for element to be visible  
+✔ verifying element is not covered  
+✔ triggering real browser events  
+
+This makes Playwright more reliable than traditional automation approaches.
+
+---
+
+# Locating the Buttons
+
+Primary button locator:
+
+```python
+primary_button = page.locator("button.btn-primary")
+```
+
+Success button locator:
+
+```python
+success_button = page.locator("button.btn-success")
+```
+
+---
+
+# Verifying the Result
+
+The test confirms the success button appears.
+
+```python
+expect(success_button).to_be_visible()
+```
+
+This ensures the click interaction triggered the expected UI change.
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_click_event.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_click_event.py .           [100%]
+
+1 passed
+```
+
+---
+
+# Why This Scenario Is Important
+
+Some applications intentionally prevent automation by ignoring synthetic DOM clicks.
+
+Automation engineers must understand how to:
+
+- simulate real user interactions
+- trigger proper browser events
+- verify UI responses
+
+This scenario helps demonstrate those skills.
+
+---
+
+# Best Practices for Click Interactions
+
+When automating click behavior:
+
+✔ use Playwright's built-in `click()` method  
+✔ avoid manual JavaScript clicks when possible  
+✔ ensure the element is visible before clicking  
+✔ verify UI changes after interaction  
+
+---
+
+# Key Takeaways
+
+✔ Some applications ignore synthetic DOM click events  
+✔ Playwright simulates real user interactions  
+✔ Proper click handling ensures reliable UI automation  
+✔ Automation tests should verify UI changes after clicking  
+
+---
+---
+
+# UI Testing Playground – Visibility (Understanding Different Hidden Element States)
+
+In web automation testing, elements can become **hidden or inaccessible in multiple ways**.
+
+Automation engineers must understand the difference between these states because they affect whether an element can be interacted with.
+
+The **UI Testing Playground Visibility scenario** demonstrates several techniques used by web applications to hide elements.
+
+Website:
+
+```
+http://uitestingplayground.com/visibility
+```
+
+After clicking the **Hide button**, several elements become hidden using different CSS and DOM techniques.
+
+---
+
+# Example Test: Validating Different Visibility States
+
+```python
+from playwright.sync_api import Page, expect, TimeoutError
+import pytest
+
+
+def test_visibility_states(page: Page):
+
+    page.goto("http://uitestingplayground.com/")
+
+    visibility_link = page.get_by_role("link", name="Visibility")
+    visibility_link.click()
+
+    hide_button = page.get_by_role("button", name="Hide")
+
+    removed_button = page.get_by_role("button", name="Removed")
+    zero_width_button = page.get_by_role("button", name="Zero Width")
+    overlapped_button = page.get_by_role("button", name="Overlapped")
+    opacity_button = page.get_by_role("button", name="Opacity 0")
+    visibility_hidden_button = page.get_by_role("button", name="Visibility Hidden")
+    display_none_button = page.get_by_role("button", name="Display None")
+    offscreen_button = page.get_by_role("button", name="Offscreen")
+
+    hide_button.click()
+
+    expect(removed_button).to_be_hidden()
+
+    expect(zero_width_button).to_have_css("width", "0px")
+
+    with pytest.raises(TimeoutError):
+        overlapped_button.click(timeout=2000)
+
+    expect(opacity_button).to_have_css("opacity", "0")
+
+    expect(visibility_hidden_button).to_be_hidden()
+
+    expect(offscreen_button).not_to_be_in_viewport()
+```
+
+---
+
+# What This Test Demonstrates
+
+This test verifies multiple ways that UI elements can become hidden or inaccessible.
+
+Steps performed:
+
+1. Navigate to UI Testing Playground
+2. Open the **Visibility page**
+3. Click the **Hide button**
+4. Verify different elements become hidden using different methods
+
+---
+
+# Different Visibility States in Web Applications
+
+After clicking **Hide**, elements are hidden using various CSS and DOM techniques.
+
+These techniques simulate real-world UI behaviors.
+
+---
+
+# Removed Element
+
+The element is completely removed from the DOM.
+
+Assertion:
+
+```python
+expect(removed_button).to_be_hidden()
+```
+
+This confirms the element no longer appears on the page.
+
+---
+
+# Zero Width Element
+
+The element remains in the DOM but has a width of `0px`.
+
+Assertion:
+
+```python
+expect(zero_width_button).to_have_css("width", "0px")
+```
+
+The element technically exists but cannot be interacted with.
+
+---
+
+# Overlapped Element
+
+Another element covers the button, preventing clicks.
+
+Example error:
+
+```
+Element is not clickable because another element receives the click
+```
+
+Test validation:
+
+```python
+with pytest.raises(TimeoutError):
+    overlapped_button.click(timeout=2000)
+```
+
+---
+
+# Opacity 0 Element
+
+The element has:
+
+```
+opacity: 0
+```
+
+It is still in the DOM but fully transparent.
+
+Assertion:
+
+```python
+expect(opacity_button).to_have_css("opacity", "0")
+```
+
+---
+
+# Visibility Hidden Element
+
+The element uses:
+
+```
+visibility: hidden
+```
+
+Assertion:
+
+```python
+expect(visibility_hidden_button).to_be_hidden()
+```
+
+---
+
+# Display None Element
+
+The element uses:
+
+```
+display: none
+```
+
+This removes the element from layout rendering.
+
+Playwright detects it as hidden.
+
+---
+
+# Offscreen Element
+
+The element is moved outside the visible viewport.
+
+Assertion:
+
+```python
+expect(offscreen_button).not_to_be_in_viewport()
+```
+
+This confirms the element exists but is not visible on screen.
+
+---
+
+# Why This Scenario Is Important
+
+Modern web applications hide elements in many different ways.
+
+Automation engineers must understand how to detect these states to prevent test failures.
+
+Common real-world scenarios include:
+
+- modal overlays
+- animation transitions
+- responsive UI behavior
+- hidden menu items
+
+---
+
+# Common Automation Failures
+
+Tests often fail when interacting with hidden elements.
+
+Typical errors include:
+
+```
+Element not visible
+Element not clickable
+Element outside viewport
+Timeout exceeded
+```
+
+Understanding visibility states helps diagnose these issues.
+
+---
+
+# Running the Test
+
+Run the test with Pytest:
+
+```bash
+pytest test_visibility_states.py
+```
+
+Example output:
+
+```
+collected 1 item
+
+test_visibility_states.py .           [100%]
+
+1 passed
+```
+
+---
+
+# Best Practices for Visibility Testing
+
+When testing UI visibility states:
+
+✔ verify elements are visible before interacting  
+✔ check CSS properties when debugging UI issues  
+✔ detect elements hidden by overlays or animations  
+✔ use Playwright visibility assertions  
+
+---
+
+# Key Takeaways
+
+✔ Elements can be hidden in multiple ways in modern web applications  
+✔ CSS properties like `opacity`, `display`, and `visibility` affect UI behavior  
+✔ Playwright provides assertions for detecting visibility states  
+✔ Understanding hidden element behavior is critical for reliable automation testing  
 
 ---
