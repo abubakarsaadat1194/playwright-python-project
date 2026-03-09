@@ -242,7 +242,29 @@
 - [Creating a Reusable API Fixture](#creating-a-reusable-api-fixture)
 - [Example Test: Search Users API](#example-test-search-users-api)
 - [Why Test Search APIs?](#why-test-search-apis)
+### REST API Testing with Playwright
+
+- [REST API CRUD Testing with Playwright](#rest-api-crud-testing-with-playwright)
+- [Supported HTTP Methods](#supported-http-methods)
+- [Creating an API Request Context](#creating-an-api-request-context)
+- [GET Request – Search Users](#get-request--search-users)
+- [POST Request – Create User](#post-request--create-user)
+- [PUT Request – Update User](#put-request--update-user)
+- [PATCH Request – Partial Update](#patch-request--partial-update)
+- [DELETE Request – Remove User](#delete-request--remove-user)
+- [Example API Test Suite](#example-api-test-suite)
+- [Key Concepts Demonstrated](#key-concepts-demonstrated)
+### API Mocking with Playwright
+
+- [API Response Mocking with Playwright](#api-response-mocking-with-playwright)
+- [Intercepting API Requests](#intercepting-api-requests)
+- [Fetching the Original Response](#fetching-the-original-response)
+- [Modifying API Response Data](#modifying-api-response-data)
+- [Returning the Mocked Response](#returning-the-mocked-response)
+- [Example API Mock Test](#example-api-mock-test)
+- [Key Concepts Demonstrated](#key-concepts-demonstrated)
 ---
+
 # Playwright Python Setup Guide
 
 This guide explains how to install and configure **Playwright with Python** on macOS.
@@ -16049,3 +16071,379 @@ Search endpoints are common in applications such as:
 - user management systems
 - product catalogs
 - content management systems
+---
+
+# REST API CRUD Testing with Playwright
+
+Playwright provides powerful capabilities for testing REST APIs through the `APIRequestContext`.  
+This allows automated tests to send HTTP requests directly to backend services without launching a browser.
+
+In this example, we test the **DummyJSON API** by performing common CRUD operations using different HTTP methods.
+
+API base URL used:
+
+```
+https://dummyjson.com
+```
+
+---
+
+# Supported HTTP Methods
+
+The following HTTP methods are commonly used in API testing:
+
+| Method | Purpose |
+|------|------|
+| GET | Retrieve data |
+| POST | Create new resources |
+| PUT | Update existing resources |
+| PATCH | Partially update resources |
+| DELETE | Remove resources |
+
+Playwright supports all of these methods through `APIRequestContext`.
+
+---
+
+# Creating an API Request Context
+
+A reusable API client can be created using a Pytest fixture.
+
+```python
+from playwright.sync_api import *
+import pytest
+
+
+@pytest.fixture
+def api_context(playwright: Playwright) -> APIRequestContext:
+
+    api_context = playwright.request.new_context(
+        base_url="https://dummyjson.com"
+    )
+
+    yield api_context
+
+    api_context.dispose()
+```
+
+This fixture creates a reusable API request context that can be used across multiple tests.
+
+---
+
+# GET Request – Search Users
+
+This test verifies that the search endpoint returns users containing the query term.
+
+```python
+def test_users_search(api_context: APIRequestContext):
+
+    query = "John"
+
+    response = api_context.get(f"/users/search?q={query}")
+
+    assert response.status == 200
+
+    users_data = response.json()
+
+    print("Users found:", users_data["total"])
+
+    for user in users_data["users"]:
+
+        print("Checking user:", user["firstName"], user["lastName"])
+
+        full_text = (
+            user["firstName"]
+            + user["lastName"]
+            + user["maidenName"]
+            + user["email"]
+            + user["username"]
+        ).lower()
+
+        assert query.lower() in full_text
+```
+
+---
+
+# POST Request – Create User
+
+This test creates a new user using a POST request.
+
+```python
+def test_create_user(api_context: APIRequestContext):
+
+    response = api_context.post(
+        "/users/add",
+        headers={"Content-Type": "application/json"},
+        data={
+            "firstName": "Damien",
+            "lastName": "Smith",
+            "age": 27
+        }
+    )
+
+    user_data = response.json()
+
+    print("User data:", user_data)
+
+    assert response.status == 200
+    assert user_data["firstName"] == "Damien"
+```
+
+---
+
+# PUT Request – Update User
+
+PUT requests replace the entire resource with new data.
+
+```python
+def test_update_user(api_context: APIRequestContext):
+
+    response = api_context.put(
+        "/users/1",
+        headers={"Content-Type": "application/json"},
+        data={
+            "firstName": "EmilyUpdated",
+            "lastName": "JohnsonUpdated",
+            "age": 30
+        }
+    )
+
+    updated_user = response.json()
+
+    print("Updated user:", updated_user)
+
+    assert response.status == 200
+    assert updated_user["firstName"] == "EmilyUpdated"
+```
+
+---
+
+# PATCH Request – Partial Update
+
+PATCH requests modify only specific fields of a resource.
+
+```python
+def test_partial_update_user(api_context: APIRequestContext):
+
+    response = api_context.patch(
+        "/users/1",
+        headers={"Content-Type": "application/json"},
+        data={
+            "age": 35
+        }
+    )
+
+    patched_user = response.json()
+
+    print("Patched user:", patched_user)
+
+    assert response.status == 200
+    assert patched_user["age"] == 35
+```
+
+---
+
+# DELETE Request – Remove User
+
+This test deletes a user from the system.
+
+```python
+def test_delete_user(api_context: APIRequestContext):
+
+    response = api_context.delete("/users/1")
+
+    deleted_user = response.json()
+
+    print("Deleted user:", deleted_user)
+
+    assert response.status == 200
+    assert deleted_user["isDeleted"] is True
+```
+
+---
+
+# Example API Test Suite
+
+Complete example using all HTTP methods:
+
+```python
+from playwright.sync_api import *
+import pytest
+
+
+@pytest.fixture
+def api_context(playwright: Playwright) -> APIRequestContext:
+    api_context = playwright.request.new_context(
+        base_url="https://dummyjson.com"
+    )
+    yield api_context
+    api_context.dispose()
+```
+
+The tests demonstrate full **CRUD operations** using Playwright.
+
+---
+
+# Key Concepts Demonstrated
+
+This section demonstrates several important API automation techniques:
+
+- REST API testing with Playwright
+- CRUD operations (Create, Read, Update, Delete)
+- Query parameter testing
+- JSON response validation
+- APIRequestContext usage
+- Pytest fixtures for reusable API clients
+
+These techniques are commonly used in **modern API automation frameworks and SDET workflows**.
+---
+
+# API Response Mocking with Playwright
+
+Playwright allows automated tests to **intercept and modify API responses** before they reach the browser.  
+This technique is known as **API mocking** and is commonly used to simulate backend responses during testing.
+
+API mocking helps testers:
+
+- simulate backend responses
+- test edge cases
+- control test data
+- isolate frontend testing from backend dependencies
+
+In this example, we intercept a request to the DummyJSON API and modify the returned user data before the browser receives it.
+
+API endpoint used:
+
+```
+https://dummyjson.com/users/1
+```
+
+---
+
+# Intercepting API Requests
+
+Playwright intercepts network requests using the `page.route()` method.
+
+```python
+page.route("**/users/1", modify_user)
+```
+
+The `**` wildcard allows matching any URL path ending with `/users/1`.
+
+---
+
+# Fetching the Original Response
+
+To modify an API response, the original response must first be retrieved using:
+
+```python
+response = route.fetch()
+```
+
+This sends the request to the server and captures the real response.
+
+Example:
+
+```python
+original_data = response.json()
+```
+
+---
+
+# Modifying API Response Data
+
+Once the response is retrieved, it can be modified before being returned to the browser.
+
+Example:
+
+```python
+mocked_data = original_data.copy()
+
+mocked_data["firstName"] = "Automation"
+mocked_data["lastName"] = "Tester"
+```
+
+This allows tests to simulate different backend responses.
+
+---
+
+# Returning the Mocked Response
+
+The modified response is returned to the browser using `route.fulfill()`.
+
+```python
+route.fulfill(
+    response=response,
+    body=json.dumps(mocked_data)
+)
+```
+
+This replaces the server response with the mocked data.
+
+---
+
+# Example API Mock Test
+
+```python
+from playwright.sync_api import Page
+import json
+
+
+def modify_user(route):
+
+    # Step 1: Fetch the original response
+    response = route.fetch()
+
+    original_data = response.json()
+
+    print("\n--- Original API Response ---")
+    print(original_data)
+
+    # Step 2: Modify the response
+    mocked_data = original_data.copy()
+
+    mocked_data["firstName"] = "Automation"
+    mocked_data["lastName"] = "Tester"
+
+    print("\n--- Mocked API Response ---")
+    print(mocked_data)
+
+    # Step 3: Send modified response
+    route.fulfill(
+        response=response,
+        body=json.dumps(mocked_data)
+    )
+
+
+def test_modify_user(page: Page):
+
+    page.route("**/users/1", modify_user)
+
+    page.goto("https://dummyjson.com/users/1")
+```
+
+---
+
+# Example Console Output
+
+```
+--- Original API Response ---
+{'id': 1, 'firstName': 'Emily', 'lastName': 'Johnson'}
+
+--- Mocked API Response ---
+{'id': 1, 'firstName': 'Automation', 'lastName': 'Tester'}
+```
+
+---
+
+# Key Concepts Demonstrated
+
+This example demonstrates several important Playwright automation techniques:
+
+- API request interception
+- Network route handling
+- Fetching original responses
+- Mocking API responses
+- Modifying JSON response data
+- Returning custom responses to the browser
+
+API mocking is widely used in **modern automation frameworks** to ensure stable and deterministic tests.
