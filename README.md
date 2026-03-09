@@ -171,6 +171,77 @@
 - [Click Event Handling](#ui-testing-playground--click-handling-real-user-click-events)
 - [Visibility States Testing](#ui-testing-playground--visibility-understanding-different-hidden-element-states)
 
+### Playwright UI Automation (Page Object Model)
+
+- [Page Object Model (POM)](#page-object-model-pom)
+- [Project Structure](#project-structure)
+- [Page Object Implementation](#page-object-implementation)
+- [Test Implementation](#test-implementation)
+- [Running the Tests](#running-the-tests)
+- [Key Automation Concepts Demonstrated](#key-automation-concepts-demonstrated)
+- [Future Enhancements](#future-enhancements)
+- [Learning Objective](#learning-objective)
+
+### Playwright Documentation Automation Example
+
+- [Playwright Documentation Site – Automation Tests (POM Example)](#playwright-documentation-site--automation-tests-pom-example)
+- [Test Scenarios Implemented](#test-scenarios-implemented)
+- [Page Object Model Implementation](#page-object-model-implementation)
+- [Automation Concepts Demonstrated](#automation-concepts-demonstrated)
+- [Skills Demonstrated](#skills-demonstrated)
+
+### Network Interception & Request Handling
+
+- [Network Interception and Request/Response Handling with Playwright](#network-interception-and-requestresponse-handling-with-playwright)
+- [Capturing Network Requests](#capturing-network-requests)
+- [Capturing Network Responses](#capturing-network-responses)
+- [Route Handlers for Network Interception](#route-handlers-for-network-interception)
+- [Blocking Resource Requests](#blocking-resource-requests)
+- [Modifying Request Headers](#modifying-request-headers)
+- [Mocking API Responses](#mocking-api-responses)
+- [Redirecting Network Requests](#redirecting-network-requests)
+- [Example Test: Network Interception](#example-test-network-interception)
+- [Key Playwright Networking Concepts](#key-playwright-networking-concepts)
+
+### Response and Request Modification
+
+- [Modifying HTTP Responses with Playwright](#modifying-http-responses-with-playwright)
+- [Steps to Modify a Response](#steps-to-modify-a-response)
+- [Example: Modifying an HTML Heading](#example-modifying-an-html-heading)
+- [Explanation of Key Methods](#explanation-of-key-methods)
+- [Request Flow When Modifying Responses](#request-flow-when-modifying-responses)
+- [Benefits of Response Modification](#benefits-of-response-modification)
+
+### POST Request Interception
+
+- [Modifying POST Request Data with Playwright](#modifying-post-request-data-with-playwright)
+- [Accessing POST Request Data](#accessing-post-request-data)
+- [Modifying JSON POST Data](#modifying-json-post-data)
+- [Request Flow When Modifying POST Data](#request-flow-when-modifying-post-data)
+- [Key Methods and Properties](#key-methods-and-properties)
+- [Why Modify POST Requests?](#why-modify-post-requests)
+
+### Advanced Networking Concepts
+
+- [Understanding route.fetch() vs route.fulfill()](#understanding-routefetch-vs-routefulfill)
+
+### API Testing with Playwright
+
+- [API Testing with Playwright (APIRequestContext)](#api-testing-with-playwright-apirequestcontext)
+- [Creating an API Request Context](#creating-an-api-request-context)
+- [Example API Test](#example-api-test)
+- [Validating API Responses](#validating-api-responses)
+- [Why Combine API and UI Testing?](#why-combine-api-and-ui-testing)
+
+### API Validation and Search Testing
+
+- [Basic API Validation Using Playwright](#basic-api-validation-using-playwright)
+- [Example Test: Validate API Response Data](#example-test-validate-api-response-data)
+- [API Testing Using Playwright APIRequestContext](#api-testing-using-playwright-apirequestcontext)
+- [API Search Testing Using Playwright and Pytest Fixtures](#api-search-testing-using-playwright-and-pytest-fixtures)
+- [Creating a Reusable API Fixture](#creating-a-reusable-api-fixture)
+- [Example Test: Search Users API](#example-test-search-users-api)
+- [Why Test Search APIs?](#why-test-search-apis)
 ---
 # Playwright Python Setup Guide
 
@@ -14331,3 +14402,1650 @@ When testing UI visibility states:
 ✔ Understanding hidden element behavior is critical for reliable automation testing  
 
 ---
+## UI Testing Playground – Automation Tests (Playwright + Python)
+
+This module demonstrates automated UI testing using **Playwright with Python** against the testing platform:
+
+https://uitestingplayground.com
+
+The goal of this module is to showcase **Page Object Model (POM)** design, reusable automation architecture, and clean separation between **tests and page logic**.
+
+This project is part of a broader **Playwright learning and framework development exercise**.
+
+---
+
+## Test Automation Stack
+
+The following tools and technologies are used:
+
+* Python 3.11+
+* Playwright
+* Pytest
+* Page Object Model (POM)
+* Playwright Locators
+* Assertions with `expect()`
+
+---
+
+## Test Application
+
+The automation targets the **Sample App login page**:
+
+https://uitestingplayground.com/sampleapp
+
+This application allows testing of:
+
+* Successful login
+* Failed login
+* UI validation
+* Text verification
+
+---
+
+## Implemented Test Scenarios
+
+### 1. Successful Login
+
+**Test Steps**
+
+1. Navigate to Sample App
+2. Enter valid username
+3. Enter valid password
+4. Click **Log In**
+
+**Expected Result**
+
+```
+Welcome, <username>!
+```
+
+---
+
+### 2. Failed Login
+
+**Test Steps**
+
+1. Navigate to Sample App
+2. Enter valid username
+3. Enter incorrect password
+4. Click **Log In**
+
+**Expected Result**
+
+```
+Invalid username/password
+```
+
+---
+
+## Page Object Model (POM)
+
+The Page Object Model pattern is used to separate:
+
+* **UI locators**
+* **User actions**
+* **Test logic**
+
+Benefits include:
+
+* Better maintainability
+* Cleaner test code
+* Reusable page components
+* Easier debugging
+
+---
+
+## Project Structure
+
+```
+playwright-python-project
+│
+├── model
+│   ├── __init__.py
+│   └── login_page.py
+│
+├── tests
+│   └── test_app.py
+│
+├── conftest.py
+├── pytest.ini
+└── README.md
+```
+
+---
+
+## Page Object Implementation
+
+### `login_page.py`
+
+```
+from playwright.sync_api import Page
+
+
+class LoginPage:
+
+    URL = "http://uitestingplayground.com/sampleapp"
+
+    def __init__(self, page: Page):
+        self.page = page
+
+        self.username_input = page.get_by_placeholder("User Name")
+        self.password_input = page.get_by_placeholder("********")
+        self.login_btn = page.get_by_role("button", name="Log In")
+        self.label = page.locator("#loginstatus")
+
+    def open(self):
+        self.page.goto(self.URL)
+
+    def login(self, username: str, password: str):
+        self.username_input.fill(username)
+        self.password_input.fill(password)
+        self.login_btn.click()
+```
+
+---
+
+## Test Implementation
+
+### `test_app.py`
+
+```
+from playwright.sync_api import Page, expect
+from model.login_page import LoginPage
+
+
+def test_successful_login(page: Page):
+
+    username = "test"
+    password = "pwd"
+
+    login_page = LoginPage(page)
+    login_page.open()
+
+    login_page.login(username, password)
+
+    expect(login_page.label).to_have_text(f"Welcome, {username}!")
+
+
+def test_failed_login(page: Page):
+
+    username = "test"
+    password = "wrongpwd"
+
+    login_page = LoginPage(page)
+    login_page.open()
+
+    login_page.login(username, password)
+
+    expect(login_page.label).to_have_text("Invalid username/password")
+```
+
+---
+
+## Running the Tests
+
+Install dependencies:
+
+```
+pip install playwright pytest
+```
+
+Install browser binaries:
+
+```
+playwright install
+```
+
+Run tests:
+
+```
+pytest
+```
+
+Run tests in headed mode:
+
+```
+pytest --headed
+```
+
+---
+
+## Key Automation Concepts Demonstrated
+
+This module demonstrates several important automation practices:
+
+### Page Object Model
+
+Separates test logic from UI interactions.
+
+### Playwright Locators
+
+Uses modern locator strategies such as:
+
+```
+get_by_role()
+get_by_placeholder()
+locator()
+```
+
+### Assertions
+
+Assertions use Playwright's built-in **expect API**.
+
+Example:
+
+```
+expect(locator).to_have_text()
+```
+
+---
+
+## Future Enhancements
+
+Planned improvements for this automation framework include:
+
+* Base page class
+* Reusable test fixtures
+* Test data management
+* Logging utilities
+* Screenshot capture on failure
+* CI/CD integration with GitHub Actions
+* Allure reporting
+
+---
+
+## Learning Objective
+
+This module helps build practical experience with:
+
+* Playwright automation
+* Python test frameworks
+* Page Object Model design
+* UI testing best practices
+
+These skills are essential for **Automation QA Engineers and SDET roles**.
+
+## Playwright Documentation Site – Automation Tests (POM Example)
+
+This module demonstrates UI automation against the official Playwright documentation website:
+
+https://playwright.dev/python
+
+The goal of this test module is to practice **browser interaction, navigation, and search functionality** while implementing the **Page Object Model (POM)** pattern.
+
+This example also highlights how Playwright handles:
+
+* keyboard shortcuts
+* dynamic search components
+* locator-based assertions
+
+---
+
+## Test Scenarios Implemented
+
+### 1. Navigate to Documentation
+
+**Test Steps**
+
+1. Open Playwright documentation homepage
+2. Click the **Docs** navigation link
+
+**Expected Result**
+
+The documentation page loads successfully.
+
+---
+
+### 2. Search Documentation
+
+**Test Steps**
+
+1. Open Playwright documentation
+2. Trigger documentation search
+3. Enter search term **"assertions"**
+
+**Expected Result**
+
+Search dropdown displays results related to assertions.
+
+Example expected content:
+
+```text
+List of assertions
+```
+
+---
+
+## Page Object Model Implementation
+
+The Playwright documentation interactions are encapsulated in a dedicated page object.
+
+### `playwright_page.py`
+
+```python
+from playwright.sync_api import Page, Locator
+
+
+class PlaywrightPage:
+
+    URL = "https://playwright.dev/python"
+
+    def __init__(self, page: Page):
+        self.page = page
+
+        self.docs_link = page.get_by_role("link", name="Docs")
+        self.search_input = page.get_by_placeholder("Search docs")
+
+    def open(self):
+        self.page.goto(self.URL)
+
+    def visit_docs(self):
+        self.docs_link.click()
+
+    def search(self, query: str):
+        self.page.keyboard.press("Control+KeyK")
+        self.search_input.fill(query)
+
+    def search_results(self) -> Locator:
+        return self.page.locator("div.DocSearch-Dropdown")
+```
+
+---
+
+## Test Implementation
+
+### `test_docs.py`
+
+```python
+from playwright.sync_api import Page, expect
+from model.playwright_page import PlaywrightPage
+
+
+def test_docs_link(page: Page):
+
+    pw = PlaywrightPage(page)
+
+    pw.open()
+    pw.visit_docs()
+
+    expect(page).to_have_url("https://playwright.dev/python/docs/intro")
+
+
+def test_docs_search(page: Page):
+
+    pw = PlaywrightPage(page)
+
+    pw.open()
+    pw.search("assertions")
+
+    expect(pw.search_results()).to_contain_text("List of assertions")
+```
+
+---
+
+## Project Structure (Including Docs Tests)
+
+```text
+playwright-python-project
+│
+├── model
+│   ├── __init__.py
+│   ├── login_page.py
+│   └── playwright_page.py
+│
+├── tests
+│   ├── test_app.py
+│   └── test_docs.py
+│
+├── conftest.py
+├── pytest.ini
+└── README.md
+```
+
+---
+
+## Automation Concepts Demonstrated
+
+This module demonstrates several important Playwright automation capabilities.
+
+### Keyboard Interaction
+
+Triggering search using keyboard shortcuts:
+
+```python
+page.keyboard.press("Control+KeyK")
+```
+
+---
+
+### Dynamic Component Testing
+
+The search dropdown is dynamically rendered, so the test verifies its contents using a locator:
+
+```python
+expect(locator).to_contain_text()
+```
+
+---
+
+### Role-Based Locators
+
+Playwright allows semantic UI targeting using roles.
+
+Example:
+
+```python
+page.get_by_role("link", name="Docs")
+```
+
+This approach improves **test readability and resilience**.
+
+---
+
+## Skills Demonstrated
+
+Through this module the project demonstrates:
+
+* Playwright browser automation
+* Python-based test architecture
+* Page Object Model design
+* Dynamic UI testing
+* Keyboard event automation
+* Locator-based assertions
+
+These patterns are commonly used in **modern UI automation frameworks** built by **SDET engineers**.
+## Network Interception and Request/Response Handling with Playwright
+
+This section demonstrates how Playwright can monitor, intercept, and modify network traffic during automated UI testing. Modern web applications rely heavily on APIs and asynchronous network calls, so having control over requests and responses is an essential capability for reliable test automation.
+
+Playwright provides several powerful tools for this:
+
+- Network event listeners
+- Route handlers
+- Request modification
+- Response mocking
+- Request blocking
+- Request redirection
+
+These capabilities allow automation engineers to simulate different backend behaviors and test complex scenarios without changing the application itself.
+
+---
+
+## Capturing Network Requests
+
+Playwright allows tests to listen for outgoing HTTP requests using the `page.on("request")` event.
+
+Example:
+
+```python
+def on_request(request: Request):
+    print("Request made:")
+    print("URL:", request.url)
+    print("Method:", request.method)
+    print("Headers:", request.headers)
+```
+
+This event listener captures every request the browser sends.
+
+---
+
+## Capturing Network Responses
+
+Playwright also provides the `page.on("response")` event for listening to incoming server responses.
+
+Example:
+
+```python
+def on_response(response: Response):
+    print("Response received:")
+    print("URL:", response.url)
+    print("Status:", response.status)
+    print("Content-Type:", response.headers.get("content-type"))
+```
+
+This allows tests to inspect response status codes and headers.
+
+---
+
+## Route Handlers for Network Interception
+
+Route handlers allow tests to intercept network requests before they reach the server.
+
+Example:
+
+```python
+page.route("**/*", on_route)
+```
+
+The double star (`**`) is a wildcard pattern that matches any number of path segments in a URL.
+
+Route handlers can:
+
+- block requests
+- modify request headers
+- mock responses
+- redirect requests
+
+---
+
+## Blocking Resource Requests
+
+Large resources such as images can slow down automated tests. Playwright allows these requests to be blocked.
+
+Example:
+
+```python
+if request.resource_type == "image":
+    route.abort()
+```
+
+Blocking images improves test speed and reduces unnecessary network traffic.
+
+---
+
+## Modifying Request Headers
+
+Route handlers can modify outgoing requests before they are sent to the server.
+
+Example:
+
+```python
+headers = request.headers.copy()
+headers["X-Test-Automation"] = "Playwright-Python"
+
+route.continue_(headers=headers)
+```
+
+This technique is useful for:
+
+- injecting custom headers
+- enabling feature flags
+- simulating authenticated requests
+
+---
+
+## Mocking API Responses
+
+Playwright can replace the server's response entirely with a mocked response.
+
+Example:
+
+```python
+route.fulfill(
+    status=200,
+    content_type="application/json",
+    body='{"message":"Mocked API response from Playwright"}'
+)
+```
+
+Mocking responses is useful when:
+
+- backend services are unavailable
+- testing frontend behavior independently
+- simulating error conditions
+
+---
+
+## Redirecting Network Requests
+
+Requests can also be redirected to different endpoints.
+
+Example:
+
+```python
+route.continue_(
+    url="https://playwright.dev/python/docs/intro"
+)
+```
+
+This allows tests to simulate:
+
+- changed endpoints
+- fallback services
+- alternative resources
+
+---
+
+## Example Test: Network Interception
+
+The following test demonstrates how to combine request monitoring, response monitoring, and route interception.
+
+```python
+from playwright.sync_api import Page, expect, Request, Response, Route
+
+
+def on_request(request: Request):
+    print("Request made:", request.url)
+
+
+def on_response(response: Response):
+    print("Response received:", response.status)
+
+
+def on_route(route: Route):
+
+    request = route.request
+
+    if request.resource_type == "image":
+        route.abort()
+        return
+
+    route.continue_()
+
+
+def test_docs_link(page: Page):
+
+    page.on("request", on_request)
+    page.on("response", on_response)
+
+    page.route("**/*", on_route)
+
+    page.goto("https://playwright.dev/python")
+
+    docs_link = page.get_by_role("link", name="Docs")
+    docs_link.click()
+
+    expect(page).to_have_url("https://playwright.dev/python/docs/intro")
+```
+
+---
+
+## Key Playwright Networking Concepts
+
+This section demonstrates several important Playwright networking capabilities:
+
+- Listening to network requests
+- Monitoring server responses
+- Intercepting HTTP traffic
+- Blocking unwanted resources
+- Modifying request headers
+- Mocking backend responses
+- Redirecting network requests
+
+These techniques allow automation engineers to create **more reliable and controlled UI tests** by managing network behavior directly within the test framework.
+---
+
+## Modifying HTTP Responses with Playwright
+
+Playwright allows tests to intercept HTTP responses and modify their content before the browser receives them. This technique is useful for testing UI behavior under different backend responses without changing the server.
+
+Typical use cases include:
+
+- modifying HTML content dynamically
+- simulating different UI states
+- testing error handling
+- mocking server responses
+
+To modify a response, Playwright provides two important methods:
+
+- `route.fetch()` – retrieves the original response from the server
+- `route.fulfill()` – sends a modified response back to the browser
+
+The typical workflow follows this pattern:
+
+```
+fetch → modify → fulfill
+```
+
+---
+
+## Steps to Modify a Response
+
+1. Intercept the request using `page.route()`.
+2. Fetch the original server response using `route.fetch()`.
+3. Extract the response body.
+4. Modify the response content.
+5. Return the modified response using `route.fulfill()`.
+
+---
+
+## Example: Modifying an HTML Heading
+
+The following example intercepts a request to the UI Testing Playground sample app and modifies the `<h1>` heading before the page renders.
+
+Original HTML:
+
+```html
+<h1>Welcome</h1>
+```
+
+Modified HTML:
+
+```html
+<h1>Welcome Automation Engineer</h1>
+```
+
+---
+
+## Test Implementation
+
+```python
+from playwright.sync_api import Page, Route
+
+
+def modify_response(route: Route):
+
+    # Step 1: fetch original response
+    response = route.fetch()
+
+    # Step 2: read response body
+    html = response.text()
+
+    # Step 3: modify HTML
+    modified_html = html.replace(
+        "<h1>Welcome</h1>",
+        "<h1>Welcome Automation Engineer</h1>"
+    )
+
+    # Step 4: send modified response
+    route.fulfill(
+        response=response,
+        body=modified_html
+    )
+
+
+def test_modify_heading(page: Page):
+
+    page.route("**/sampleapp", modify_response)
+
+    page.goto("http://uitestingplayground.com/sampleapp")
+```
+
+---
+
+## Explanation of Key Methods
+
+### `route.fetch()`
+
+This method sends the intercepted request to the server and retrieves the original response.
+
+Example:
+
+```python
+response = route.fetch()
+```
+
+It allows the test to inspect or modify the server response before the browser receives it.
+
+---
+
+### `route.fulfill()`
+
+This method sends a custom response back to the browser.
+
+Example:
+
+```python
+route.fulfill(
+    response=response,
+    body=modified_html
+)
+```
+
+It can modify:
+
+- response body
+- status code
+- headers
+- content type
+
+---
+
+## Request Flow When Modifying Responses
+
+```
+Browser requests page
+        ↓
+Playwright intercepts request
+        ↓
+route.fetch() retrieves original server response
+        ↓
+Test modifies response content
+        ↓
+route.fulfill() returns modified response
+        ↓
+Browser renders modified page
+```
+
+---
+
+## Benefits of Response Modification
+
+Response interception provides several advantages in test automation:
+
+- simulate backend conditions without changing the server
+- test UI behavior under different responses
+- reproduce rare edge cases
+- isolate frontend testing from backend dependencies
+
+These capabilities make Playwright particularly powerful for **advanced UI and full-stack testing scenarios**.
+---
+
+## Modifying POST Request Data with Playwright
+
+In addition to modifying responses, Playwright also allows tests to intercept and modify **outgoing HTTP requests**, including POST requests.
+
+This is useful for testing scenarios such as:
+
+- altering form submission data
+- testing validation rules
+- simulating invalid user input
+- injecting test parameters
+- security and edge-case testing
+
+When intercepting POST requests, Playwright provides access to the request body through the `request` object.
+
+Common properties used:
+
+- `request.method`
+- `request.post_data`
+- `request.post_data_json`
+
+To modify a request, the test intercepts the request and forwards a modified version using:
+
+```
+route.continue_()
+```
+
+---
+
+## Accessing POST Request Data
+
+POST data is usually sent as a string. For example:
+
+```
+username=test&password=123
+```
+
+You can access the raw POST body using:
+
+```python
+request.post_data
+```
+
+Example:
+
+```python
+from playwright.sync_api import Route
+
+def modify_post_request(route: Route):
+
+    request = route.request
+
+    if request.method == "POST":
+
+        body = request.post_data
+        print("Original POST data:", body)
+
+        modified_body = body.replace("username=test", "username=automation_user")
+
+        route.continue_(post_data=modified_body)
+
+    else:
+        route.continue_()
+```
+
+---
+
+## Modifying JSON POST Data
+
+If the request body is JSON (`application/json`), Playwright provides a helper property:
+
+```python
+request.post_data_json
+```
+
+Example:
+
+```python
+import json
+from playwright.sync_api import Route
+
+def modify_json_post(route: Route):
+
+    request = route.request
+
+    if request.method == "POST":
+
+        data = request.post_data_json
+
+        data["username"] = "qa_engineer"
+
+        modified_body = json.dumps(data)
+
+        route.continue_(post_data=modified_body)
+
+    else:
+        route.continue_()
+```
+
+---
+
+## Request Flow When Modifying POST Data
+
+```
+Browser submits POST request
+        ↓
+Playwright intercepts request
+        ↓
+Test reads request.post_data
+        ↓
+Test modifies request body
+        ↓
+route.continue_(post_data=modified_body)
+        ↓
+Server receives modified request
+```
+
+---
+
+## Key Methods and Properties
+
+| Method / Property | Purpose |
+|------------------|--------|
+| `page.route()` | Intercepts network requests |
+| `route.request` | Access the intercepted request |
+| `request.post_data` | Retrieve raw POST body |
+| `request.post_data_json` | Retrieve JSON POST body |
+| `route.continue_()` | Send modified request to server |
+
+---
+
+## Why Modify POST Requests?
+
+Modifying POST data allows automation engineers to test complex scenarios such as:
+
+- invalid form submissions
+- security edge cases
+- backend validation behavior
+- API contract testing
+- unexpected input handling
+
+This technique is commonly used in **advanced automation frameworks and security testing workflows**.
+---
+
+## Understanding `route.fetch()` vs `route.fulfill()`
+
+When modifying HTTP responses in Playwright, two important methods are commonly used:
+
+- `route.fetch()`
+- `route.fulfill()`
+
+These methods serve different purposes but are often used together when intercepting and modifying responses.
+
+---
+
+### `route.fetch()`
+
+`route.fetch()` sends the intercepted request to the server and retrieves the original response.
+
+Example:
+
+```python
+response = route.fetch()
+```
+
+This allows the test to:
+
+- obtain the original server response
+- inspect response headers
+- inspect response body
+- inspect response status codes
+
+Example usage:
+
+```python
+response = route.fetch()
+html = response.text()
+```
+
+This step retrieves the original HTML page before modification.
+
+---
+
+### `route.fulfill()`
+
+`route.fulfill()` sends a response back to the browser.
+
+Example:
+
+```python
+route.fulfill(
+    status=200,
+    body="Custom response"
+)
+```
+
+This allows the test to return:
+
+- modified responses
+- mocked API responses
+- custom HTTP status codes
+- modified headers
+
+---
+
+### Typical Response Modification Pattern
+
+Most response modification workflows follow this pattern:
+
+```
+route.fetch() → modify response → route.fulfill()
+```
+
+Example:
+
+```python
+response = route.fetch()
+
+html = response.text()
+
+modified_html = html.replace("Welcome", "Welcome Automation Engineer")
+
+route.fulfill(
+    response=response,
+    body=modified_html
+)
+```
+
+---
+
+### Comparison Table
+
+| Method | Purpose |
+|------|------|
+| `route.fetch()` | Retrieve the original response from the server |
+| `route.fulfill()` | Send a custom or modified response to the browser |
+
+---
+
+### When to Use Each Method
+
+Use `route.fetch()` when you want to:
+
+- keep the original server response
+- inspect response data
+- modify only part of the response
+
+Use `route.fulfill()` when you want to:
+
+- mock responses
+- simulate API behavior
+- send custom responses to the browser
+
+---
+
+## API Testing with Playwright (`APIRequestContext`)
+
+Playwright is not limited to UI automation. It also provides powerful API testing capabilities through the `APIRequestContext`.
+
+This allows tests to send HTTP requests directly without opening a browser.
+
+Benefits of Playwright API testing include:
+
+- faster execution
+- backend validation
+- API contract testing
+- integration testing
+- combining UI and API tests
+
+---
+
+### Creating an API Request Context
+
+An API request context can be created using the Playwright `request` object.
+
+Example:
+
+```python
+import pytest
+from playwright.sync_api import Playwright, APIRequestContext
+
+
+@pytest.fixture
+def api_context(playwright: Playwright) -> APIRequestContext:
+
+    api_context = playwright.request.new_context(
+        base_url="https://dummyjson.com"
+    )
+
+    yield api_context
+
+    api_context.dispose()
+```
+
+This fixture creates a reusable API client for tests.
+
+---
+
+### Example API Test
+
+The following example sends a search request to the DummyJSON API.
+
+```python
+def test_users_search(api_context: APIRequestContext):
+
+    query = "John"
+
+    response = api_context.get(
+        "/users/search",
+        params={"q": query}
+    )
+
+    assert response.status == 200
+
+    users_data = response.json()
+
+    print("Users found:", users_data["total"])
+
+    for user in users_data["users"]:
+        print("Checking user:", user["firstName"])
+```
+
+---
+
+### Validating API Responses
+
+Playwright allows easy validation of responses:
+
+```python
+assert response.status == 200
+```
+
+Access JSON data:
+
+```python
+data = response.json()
+```
+
+Example response structure:
+
+```
+{
+  "users": [],
+  "total": 3,
+  "skip": 0,
+  "limit": 30
+}
+```
+
+---
+
+### Why Combine API and UI Testing?
+
+Combining UI and API testing provides several advantages:
+
+- verify backend functionality independently
+- reduce UI test complexity
+- validate API responses before UI rendering
+- speed up test execution
+
+Many modern test frameworks combine **UI tests and API tests within the same Playwright test suite**.
+
+---
+
+## Summary
+
+In this section we covered several advanced Playwright capabilities:
+
+- Network request monitoring
+- Network response monitoring
+- Request interception
+- Blocking resource requests
+- Modifying HTTP requests
+- Modifying HTTP responses
+- Mocking API responses
+- API testing using `APIRequestContext`
+
+These techniques allow automation engineers to build **robust, reliable, and flexible test automation frameworks** capable of testing both frontend and backend systems.
+---
+
+## Basic API Validation Using Playwright
+
+Playwright can also be used to validate API responses while running UI tests. Since modern web applications rely heavily on APIs, verifying backend responses is an important part of test automation.
+
+In this example, we send a request to the **DummyJSON API** and validate the returned user data.
+
+API endpoint used:
+
+```
+https://dummyjson.com/users/1
+```
+
+This endpoint returns information about a specific user.
+
+---
+
+## Example Test: Validate API Response Data
+
+The following test sends a request to retrieve user information and verifies that the expected fields exist in the response.
+
+```python
+from playwright.sync_api import *
+import json
+
+
+def test_users_api(page: Page):
+
+    response = page.goto("https://dummyjson.com/users/1")
+
+    user_data = response.json()
+
+    print(user_data)
+
+    assert "firstName" in user_data
+    assert "lastName" in user_data
+
+    assert user_data["firstName"] == "Emily"
+    assert user_data["lastName"] == "Johnson"
+```
+
+---
+
+## Explanation of the Test
+
+### Sending the Request
+
+The test navigates to the API endpoint using:
+
+```python
+response = page.goto("https://dummyjson.com/users/1")
+```
+
+This returns a response object containing the server response.
+
+---
+
+### Reading JSON Response Data
+
+The JSON body is extracted using:
+
+```python
+user_data = response.json()
+```
+
+This converts the response into a Python dictionary.
+
+---
+
+### Validating Response Fields
+
+The test verifies that required fields exist in the response.
+
+```python
+assert "firstName" in user_data
+assert "lastName" in user_data
+```
+
+---
+
+### Validating Field Values
+
+The test also confirms the expected values for the user.
+
+```python
+assert user_data["firstName"] == "Emily"
+assert user_data["lastName"] == "Johnson"
+```
+
+---
+
+## Example API Response
+
+Example response returned by the DummyJSON API:
+
+```
+{
+  "id": 1,
+  "firstName": "Emily",
+  "lastName": "Johnson",
+  "email": "emily.johnson@x.dummyjson.com",
+  "age": 28
+}
+```
+
+---
+
+## Why Validate API Responses?
+
+Validating API responses helps ensure:
+
+- backend services return expected data
+- APIs follow the expected contract
+- UI tests rely on correct backend data
+- integration between frontend and backend works correctly
+
+Many automation frameworks combine **UI tests and API validations** within the same test suite to improve reliability and coverage.
+---
+
+## API Testing Using Playwright `APIRequestContext`
+
+Playwright provides a powerful API testing capability through `APIRequestContext`.  
+This allows tests to send HTTP requests directly to backend services without opening a browser.
+
+API testing is useful for:
+
+- validating backend responses
+- testing REST APIs
+- verifying API contracts
+- speeding up tests by bypassing the UI
+- combining API and UI tests within the same framework
+
+---
+
+## Creating an API Request Context
+
+Playwright allows tests to create an API client using:
+
+```python
+playwright.request.new_context()
+```
+
+This creates a reusable HTTP client for sending API requests.
+
+Example:
+
+```python
+api_context = playwright.request.new_context(
+    base_url="https://dummyjson.com"
+)
+```
+
+Setting a `base_url` simplifies API calls by allowing relative endpoints.
+
+---
+
+## Example API Test
+
+The following test sends a GET request to retrieve user data and validates the response.
+
+```python
+from playwright.sync_api import *
+import json
+
+
+def test_users_api(playwright: Playwright):
+
+    api_context = playwright.request.new_context(
+        base_url="https://dummyjson.com"
+    )
+
+    response = api_context.get("/users/1")
+
+    user_data = response.json()
+
+    print(user_data)
+
+    assert "firstName" in user_data
+    assert "lastName" in user_data
+
+    assert user_data["firstName"] == "Emily"
+    assert user_data["lastName"] == "Johnson"
+```
+
+---
+
+## Explanation of the Test
+
+### Creating the API Client
+
+The test starts by creating an API request context.
+
+```python
+api_context = playwright.request.new_context(
+    base_url="https://dummyjson.com"
+)
+```
+
+This allows all requests to be sent relative to the base URL.
+
+---
+
+### Sending a GET Request
+
+The test retrieves user data using:
+
+```python
+response = api_context.get("/users/1")
+```
+
+This sends an HTTP GET request to:
+
+```
+https://dummyjson.com/users/1
+```
+
+---
+
+### Parsing the JSON Response
+
+The JSON response is converted into a Python dictionary using:
+
+```python
+user_data = response.json()
+```
+
+---
+
+### Validating Response Data
+
+The test verifies both the existence of fields and their values.
+
+```python
+assert "firstName" in user_data
+assert "lastName" in user_data
+```
+
+Then it confirms the expected user values.
+
+```python
+assert user_data["firstName"] == "Emily"
+assert user_data["lastName"] == "Johnson"
+```
+
+---
+
+## Example API Response
+
+Example response returned by the DummyJSON API:
+
+```
+{
+  "id": 1,
+  "firstName": "Emily",
+  "lastName": "Johnson",
+  "email": "emily.johnson@x.dummyjson.com",
+  "age": 28
+}
+```
+
+---
+
+## Benefits of API Testing with Playwright
+
+Using `APIRequestContext` provides several advantages:
+
+- faster execution compared to UI tests
+- ability to validate backend services directly
+- easy integration with existing Playwright test frameworks
+- ability to combine API and UI validations in the same test suite
+
+Many modern automation frameworks use **Playwright for both UI testing and API testing** within a unified testing strategy.
+---
+
+## API Search Testing Using Playwright and Pytest Fixtures
+
+In addition to simple API validation, Playwright can also test **search endpoints and query parameters**.  
+This example demonstrates how to use **Pytest fixtures together with Playwright's `APIRequestContext`** to test a search API.
+
+The test sends a query request to the DummyJSON API and verifies that the returned results contain the expected search term.
+
+API endpoint used:
+
+```
+https://dummyjson.com/users/search?q=John
+```
+
+---
+
+## Creating a Reusable API Fixture
+
+Pytest fixtures allow tests to reuse setup logic such as creating an API client.
+
+Example:
+
+```python
+import pytest
+from playwright.sync_api import Playwright, APIRequestContext
+
+
+@pytest.fixture
+def api_context(playwright: Playwright) -> APIRequestContext:
+
+    api_context = playwright.request.new_context(
+        base_url="https://dummyjson.com"
+    )
+
+    yield api_context
+
+    api_context.dispose()
+```
+
+This fixture creates a reusable API request context that can be used across multiple tests.
+
+---
+
+## Example Test: Search Users API
+
+The following test searches for users containing the term **"John"** and validates the results.
+
+```python
+from playwright.sync_api import *
+import pytest
+
+
+@pytest.fixture
+def api_context(playwright: Playwright) -> APIRequestContext:
+
+    api_context = playwright.request.new_context(
+        base_url="https://dummyjson.com"
+    )
+
+    yield api_context
+
+    api_context.dispose()
+
+
+def test_users_search(api_context: APIRequestContext):
+
+    query = "John"
+
+    response = api_context.get(f"/users/search?q={query}")
+
+    assert response.status == 200
+
+    users_data = response.json()
+
+    print("Users found:", users_data["total"])
+
+    for user in users_data["users"]:
+
+        print("Checking user:", user["firstName"], user["lastName"])
+
+        full_text = (
+            user["firstName"]
+            + user["lastName"]
+            + user["maidenName"]
+            + user["email"]
+            + user["username"]
+        ).lower()
+
+        assert query.lower() in full_text
+```
+
+---
+
+## Explanation of the Test
+
+### Sending a Search Request
+
+The test sends a GET request with a query parameter:
+
+```python
+response = api_context.get(f"/users/search?q={query}")
+```
+
+This sends a request to:
+
+```
+https://dummyjson.com/users/search?q=John
+```
+
+---
+
+### Validating Response Status
+
+The test first verifies the request was successful.
+
+```python
+assert response.status == 200
+```
+
+---
+
+### Parsing the JSON Response
+
+The JSON response is converted into a Python dictionary:
+
+```python
+users_data = response.json()
+```
+
+The response contains:
+
+```
+{
+  "users": [],
+  "total": 3,
+  "skip": 0,
+  "limit": 30
+}
+```
+
+---
+
+### Validating Search Results
+
+The test checks that the search query appears somewhere in the user's information.
+
+```python
+full_text = (
+    user["firstName"]
+    + user["lastName"]
+    + user["maidenName"]
+    + user["email"]
+    + user["username"]
+).lower()
+
+assert query.lower() in full_text
+```
+
+This ensures the query is present in at least one of the searchable fields.
+
+---
+
+## Why Test Search APIs?
+
+Testing search APIs helps ensure:
+
+- query parameters work correctly
+- APIs return relevant results
+- search functionality behaves as expected
+- backend search logic is functioning properly
+
+Search endpoints are common in applications such as:
+
+- e-commerce platforms
+- user management systems
+- product catalogs
+- content management systems
