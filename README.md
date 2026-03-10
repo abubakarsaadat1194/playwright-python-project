@@ -263,6 +263,34 @@
 - [Returning the Mocked Response](#returning-the-mocked-response)
 - [Example API Mock Test](#example-api-mock-test)
 - [Key Concepts Demonstrated](#key-concepts-demonstrated)
+### Test Reporting and Parallel Execution
+
+- [HTML Test Reports with pytest-html](#html-test-reports-with-pytest-html)
+- [Embedding Screenshots in HTML Reports](#embedding-screenshots-in-html-reports)
+- [Running Tests in Parallel](#running-tests-in-parallel)
+- [Running Tests with Reports and Parallel Execution](#running-tests-with-reports-and-parallel-execution)
+- [Benefits of Parallel Test Execution](#benefits-of-parallel-test-execution)
+
+- [GitHub API Automation with Playwright](#github-api-automation-with-playwright)
+  - [Overview](#overview)
+  - [Project Structure](#project-structure)
+  - [GitHub Credentials Configuration](#github-credentials-configuration)
+  - [Creating API Fixtures in conftest.py](#creating-api-fixtures-in-conftestpy)
+  - [Automatic Repository Setup and Cleanup](#automatic-repository-setup-and-cleanup)
+  - [Creating Issues via GitHub API](#creating-issues-via-github-api)
+  - [Verifying Issues via API](#verifying-issues-via-api)
+  - [UI Validation with Playwright](#ui-validation-with-playwright)
+  - [Key Automation Concepts Demonstrated](#key-automation-concepts-demonstrated)
+  - [CI/CD Automation with GitHub Actions and Playwright](#cicd-automation-with-github-actions-and-playwright)
+  - [Overview](#overview)
+  - [Project Structure](#project-structure)
+  - [Sample Web Application](#sample-web-application)
+  - [Hosting the Application with Python HTTP Server](#hosting-the-application-with-python-http-server)
+  - [Playwright Test Example](#playwright-test-example)
+  - [GitHub Actions CI Pipeline](#github-actions-ci-pipeline)
+  - [Workflow File (playwright-tests.yml)](#workflow-file-playwright-testsyml)
+  - [Handling Server Startup in CI](#handling-server-startup-in-ci)
+  - [Key CI/CD Concepts Demonstrated](#key-cicd-concepts-demonstrated)
 ---
 
 # Playwright Python Setup Guide
@@ -16447,3 +16475,679 @@ This example demonstrates several important Playwright automation techniques:
 - Returning custom responses to the browser
 
 API mocking is widely used in **modern automation frameworks** to ensure stable and deterministic tests.
+---
+
+# HTML Test Reports with pytest-html
+
+This project uses the **pytest-html plugin** to generate detailed HTML reports after each test run.  
+These reports provide visibility into test execution, including test results, console output, and screenshots for failed UI tests.
+
+## Installing the Required Plugin
+
+Install the reporting plugin using pip:
+
+```bash
+pip install pytest-html
+```
+
+---
+
+# Generating HTML Reports
+
+The project is configured through `pytest.ini` to automatically generate HTML reports.
+
+Example configuration:
+
+```ini
+[pytest]
+
+addopts =
+    --html=reports/report.html
+    --self-contained-html
+```
+
+This generates a report file at:
+
+```
+reports/report.html
+```
+
+The `--self-contained-html` option ensures that the report includes all required styles and scripts in a single file.
+
+---
+
+# Embedding Screenshots in HTML Reports
+
+For UI tests using Playwright, screenshots are automatically captured when a test fails.  
+These screenshots are then embedded in the HTML report to help diagnose failures.
+
+Example `conftest.py` hook:
+
+```python
+import os
+import pytest
+import pytest_html
+from datetime import datetime
+
+os.makedirs("reports/screenshots", exist_ok=True)
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+
+    outcome = yield
+    report = outcome.get_result()
+
+    if report.when == "call":
+
+        extra = getattr(report, "extra", [])
+
+        page = item.funcargs.get("page", None)
+
+        if page and report.failed:
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            screenshot_path = f"reports/screenshots/{item.name}_{timestamp}.png"
+
+            page.screenshot(path=screenshot_path)
+
+            extra.append(pytest_html.extras.image(screenshot_path))
+
+        report.extra = extra
+```
+
+When a test fails, the report will contain:
+
+- failure message
+- stack trace
+- captured logs
+- screenshot of the browser
+
+---
+
+# Running Tests in Parallel
+
+To speed up test execution, this project supports **parallel test execution** using the `pytest-xdist` plugin.
+
+Install the plugin:
+
+```bash
+pip install pytest-xdist
+```
+
+---
+
+# Running Tests with Parallel Workers
+
+Tests can be executed in parallel using the `-n` option.
+
+Example:
+
+```bash
+pytest -n 4
+```
+
+This command runs tests using **4 parallel workers**, allowing multiple tests to execute simultaneously.
+
+You can also automatically use all CPU cores:
+
+```bash
+pytest -n auto
+```
+
+---
+
+# Running Tests with Reports and Parallel Execution
+
+Both features can be combined to generate reports while running tests in parallel.
+
+Example command:
+
+```bash
+pytest -n auto --html=reports/report.html --self-contained-html
+```
+
+This will:
+
+- execute tests in parallel
+- generate an HTML report
+- embed test results and screenshots
+
+---
+
+# Benefits of Parallel Test Execution
+
+Running tests in parallel significantly reduces total execution time.
+
+Typical improvements include:
+
+| Test Suite Size | Sequential Time | Parallel Time |
+|----------------|----------------|---------------|
+50 tests | ~10 minutes | ~3 minutes |
+100 tests | ~20 minutes | ~6 minutes |
+
+Benefits include:
+
+- faster feedback during development
+- shorter CI/CD pipeline execution time
+- improved scalability for large test suites
+
+---
+
+# Summary
+
+This project demonstrates several modern automation testing practices:
+
+- HTML test reporting using **pytest-html**
+- automatic screenshot capture on test failures
+- parallel test execution using **pytest-xdist**
+- integration with Playwright-based UI and API tests
+
+These practices are widely used in **professional automation frameworks and SDET environments** to improve debugging, reliability, and execution performance.
+## GitHub API Automation with Playwright
+
+### Overview
+
+This module demonstrates how to automate **GitHub API testing using Playwright and Pytest**.  
+It combines **API testing and UI automation** within the same framework.
+
+The tests perform the following actions:
+
+- Authenticate with the **GitHub REST API**
+- Automatically **create a test repository**
+- Create a **GitHub Issue using API requests**
+- Verify the issue through API validation
+- Capture a **UI screenshot of the GitHub Issues page**
+- Automatically **delete the repository after the test session**
+
+This workflow simulates a **real-world automation scenario** where backend APIs and frontend UI are validated together.
+
+---
+
+## Project Structure
+
+    playwright-python-project
+    │
+    ├── conftest.py
+    ├── creds.py
+    ├── test_github.py
+    │
+    └── README.md
+
+| File | Purpose |
+|-----|------|
+| conftest.py | Defines reusable Playwright API fixtures |
+| creds.py | Stores GitHub authentication credentials |
+| test_github.py | Contains API and UI automation tests |
+| README.md | Project documentation |
+
+---
+
+## GitHub Credentials Configuration
+
+The `creds.py` file stores GitHub authentication details.
+
+Example configuration:
+
+    GITHUB_ACCESS_TOKEN = "YOUR_PERSONAL_ACCESS_TOKEN"
+    GITHUB_USER = "your_github_username"
+    GITHUB_REPO = "test"
+
+### Generating a GitHub Personal Access Token
+
+1. Open **GitHub Settings**
+2. Navigate to **Developer Settings**
+3. Select **Personal Access Tokens**
+4. Generate a token with permission:
+
+    repo
+
+This token is used to authenticate GitHub API requests.
+
+---
+
+## Creating API Fixtures in conftest.py
+
+The `api_context` fixture creates a reusable **Playwright API client**.
+
+Example:
+
+    @pytest.fixture(scope="session")
+    def api_context(playwright: Playwright) -> APIRequestContext:
+
+        context = playwright.request.new_context(
+            base_url="https://api.github.com",
+            extra_http_headers={
+                "Accept": "application/vnd.github.v3+json",
+                "Authorization": f"token {GITHUB_ACCESS_TOKEN}",
+            }
+        )
+
+        yield context
+
+        context.dispose()
+
+### Benefits
+
+- Reusable API client
+- Centralized authentication
+- Faster execution for multiple tests
+
+---
+
+## Automatic Repository Setup and Cleanup
+
+The `create_test_repository` fixture automatically creates and deletes the repository used for testing.
+
+Example:
+
+    @pytest.fixture(scope="session", autouse=True)
+    def create_test_repository(api_context: APIRequestContext):
+
+        api_response = api_context.post(
+            "/user/repos",
+            data={"name": GITHUB_REPO}
+        )
+
+        assert api_response.ok
+
+        yield
+
+        delete_response = api_context.delete(
+            f"/repos/{GITHUB_USER}/{GITHUB_REPO}"
+        )
+
+        assert delete_response.ok
+
+### Execution Flow
+
+    Test Session Starts
+            ↓
+    Create repository
+            ↓
+    Run all tests
+            ↓
+    Delete repository
+
+This ensures the testing environment is always clean.
+
+---
+
+## Creating Issues via GitHub API
+
+The following test creates a GitHub issue using the REST API.
+
+    def test_create_issue(api_context: APIRequestContext):
+
+        issue_data = {
+            "title": "[BUG] Something Went Wrong",
+            "body": "When performing this action, the application failed."
+        }
+
+        post_response = api_context.post(
+            f"/repos/{GITHUB_USER}/{GITHUB_REPO}/issues",
+            data=issue_data
+        )
+
+        assert post_response.ok
+
+        issue = post_response.json()
+
+        assert issue["title"] == issue_data["title"]
+        assert issue["body"] == issue_data["body"]
+
+API endpoint used:
+
+    POST /repos/{owner}/{repo}/issues
+
+---
+
+## Verifying Issues via API
+
+The test retrieves all issues and confirms that the created issue exists.
+
+    def test_new_issue_in_repo(api_context: APIRequestContext):
+
+        all_issues_response = api_context.get(
+            f"/repos/{GITHUB_USER}/{GITHUB_REPO}/issues"
+        )
+
+        issues = all_issues_response.json()
+
+        matching_issues = [
+            issue for issue in issues
+            if issue["title"] == "[BUG] Something Went Wrong"
+        ]
+
+        assert matching_issues
+
+This verifies that the issue was successfully created.
+
+---
+
+## UI Validation with Playwright
+
+Playwright can also validate the issue through the GitHub web interface.
+
+    def test_take_issue_screenshot(page: Page):
+
+        issues_url = f"https://github.com/{GITHUB_USER}/{GITHUB_REPO}/issues"
+
+        page.goto(issues_url)
+
+        page.screenshot(
+            path="issues-page.jpg",
+            full_page=True
+        )
+
+This test captures a screenshot of the repository issues page.
+
+Example output:
+
+    issues-page.jpg
+
+---
+
+## Key Automation Concepts Demonstrated
+
+This module demonstrates several important automation practices.
+
+### Playwright API Testing
+
+Using:
+
+    APIRequestContext
+
+to send HTTP requests.
+
+### Pytest Fixtures
+
+Reusable test setup using:
+
+    @pytest.fixture
+
+### Session Scoped Resources
+
+The repository is created once per test session and reused by all tests.
+
+### API + UI Testing
+
+The framework combines:
+
+- GitHub REST API automation
+- Playwright UI automation
+
+### Automatic Cleanup
+
+Test resources are removed after execution to keep the environment clean.
+
+---
+
+## Learning Outcomes
+
+This module helps develop practical skills in:
+
+- API automation testing
+- Playwright APIRequestContext usage
+- GitHub REST API automation
+- test environment management
+- combining API and UI automation
+- real-world test automation workflows
+
+These techniques are widely used by **Automation QA Engineers and SDET professionals** building modern **test automation frameworks**.
+## CI/CD Automation with GitHub Actions and Playwright
+
+### Overview
+
+This section demonstrates how to run **Playwright automated tests in a Continuous Integration (CI) pipeline using GitHub Actions**.
+
+The CI workflow performs the following steps:
+
+- Checks out the repository
+- Sets up Python
+- Installs project dependencies
+- Installs Playwright browsers
+- Starts a local web server
+- Runs automated Playwright tests
+
+The tests validate a simple web application that takes a number as input and returns the **square of that number**.
+
+This setup demonstrates a real-world **CI automation workflow used by QA engineers and SDET teams**.
+
+---
+
+## Project Structure
+
+    playwright-python-project
+    │
+    ├── tests
+    │   └── test_square.py
+    │
+    ├── web
+    │   └── index.html
+    │
+    ├── requirements.txt
+    │
+    └── .github
+        └── workflows
+            └── playwright-tests.yml
+
+| File | Purpose |
+|-----|------|
+| index.html | Sample web application |
+| test_square.py | Playwright test script |
+| requirements.txt | Python dependencies |
+| playwright-tests.yml | GitHub Actions CI workflow |
+
+---
+
+## Sample Web Application
+
+The example web application contains:
+
+- an input field
+- a button
+- logic to compute the square of a number
+
+Example implementation:
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Square Calculator</title>
+    </head>
+    <body>
+
+        <h2>Square Calculator</h2>
+
+        <input id="number-input" type="number" placeholder="Enter a number">
+
+        <button onclick="calculateSquare()">Calculate</button>
+
+        <p id="result"></p>
+
+        <script>
+        function calculateSquare() {
+
+            let number = document.getElementById("number-input").value
+
+            let square = number * number
+
+            document.getElementById("result").innerText =
+                "Square: " + square
+        }
+        </script>
+
+    </body>
+    </html>
+
+The application reads a number from the input field and displays its square.
+
+---
+
+## Hosting the Application with Python HTTP Server
+
+Before running Playwright tests, the web application must be served locally.
+
+Python provides a simple HTTP server that can host static files.
+
+Run the server with:
+
+    python -m http.server 8000
+
+This command starts a web server at:
+
+    http://localhost:8000
+
+Your Playwright tests can now interact with the application.
+
+---
+
+## Playwright Test Example
+
+Example Playwright test that validates the square calculation:
+
+    from playwright.sync_api import Page, expect
+
+    def test_square_calculation(page: Page):
+
+        page.goto("http://localhost:8000")
+
+        page.fill("#number-input", "5")
+
+        page.click("button")
+
+        expect(page.locator("#result")).to_have_text("Square: 25")
+
+Test steps:
+
+1. Open the application
+2. Enter a number
+3. Click the calculate button
+4. Verify the square is displayed correctly
+
+---
+
+## GitHub Actions CI Pipeline
+
+GitHub Actions allows automated tests to run whenever code is pushed to the repository.
+
+The workflow will automatically:
+
+- create a fresh runner environment
+- install dependencies
+- start the web server
+- execute Playwright tests
+
+This ensures every code change is automatically tested.
+
+---
+
+## Workflow File (playwright-tests.yml)
+
+GitHub Actions workflows are defined in YAML files.
+
+Location:
+
+    .github/workflows/playwright-tests.yml
+
+Example workflow:
+
+    name: Playwright Tests
+
+    on: [push, pull_request]
+
+    jobs:
+
+      test:
+
+        runs-on: ubuntu-latest
+
+        steps:
+
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Setup Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.11'
+
+        - name: Install dependencies
+          run: |
+            pip install -r requirements.txt
+
+        - name: Install Playwright browsers
+          run: |
+            playwright install
+
+        - name: Start local server
+          run: |
+            python -m http.server 8000 &
+
+        - name: Wait for server
+          run: |
+            sleep 5
+
+        - name: Run tests
+          run: |
+            pytest
+
+---
+
+## Handling Server Startup in CI
+
+In CI environments the server may not start instantly.
+
+A simple solution is:
+
+    sleep 5
+
+This allows the server time to start before running tests.
+
+However, a more robust solution is to actively check if the server is responding:
+
+    until curl -s http://localhost:8000; do
+        sleep 1
+    done
+
+This approach ensures the server is actually ready before tests begin.
+
+---
+
+## Key CI/CD Concepts Demonstrated
+
+This module demonstrates several important automation practices.
+
+### Continuous Integration
+
+Tests run automatically when code is pushed.
+
+### GitHub Actions
+
+Automation workflows executed directly within GitHub.
+
+### Environment Setup
+
+The CI runner installs dependencies and Playwright browsers automatically.
+
+### Local Server Testing
+
+The web application is hosted during the pipeline execution.
+
+### Automated UI Testing
+
+Playwright interacts with the UI and validates behavior.
+
+---
+
+## Learning Outcomes
+
+This module helps build practical experience with:
+
+- CI/CD automation
+- GitHub Actions workflows
+- Playwright UI testing
+- automated environment setup
+- running tests in CI pipelines
+
+These techniques are essential for **modern QA automation frameworks and SDET roles**.

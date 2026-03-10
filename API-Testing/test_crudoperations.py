@@ -60,7 +60,7 @@ def test_create_user(api_context: APIRequestContext):
 
     print("\nCreated user:", user_data)
 
-    assert response.status == 200
+    assert response.status == 201
     assert user_data["firstName"] == "Damien"
     assert user_data["lastName"] == "Smith"
 
