@@ -10,3 +10,5 @@ test-results/
 
 # macOS files
 .DS_Store
+.env
+GITHUB-API/creds.py
